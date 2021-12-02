@@ -1,0 +1,13 @@
+.project {
+  display: grid;
+
+  grid-template-columns: 100%;
+  grid-template-rows: 100%;
+
+  height: 100%;
+}
+
+.project > * {
+  grid-row: 1;
+  grid-column: 1;
+}

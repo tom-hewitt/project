@@ -1,3 +1,7 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": ["next/core-web-vitals", "plugin:valtio/recommended"],
+  "rules": {
+    "valtio/state-snapshot-rule": "warn",
+    "valtio/avoid-this-in-proxy": "warn",
+  }
 }

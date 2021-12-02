@@ -1,0 +1,55 @@
+.tree {
+  flex: 1 1 auto;
+
+  box-sizing: border-box;
+
+  box-sizing: border-box;
+
+  border-width: 1px 0px 1px 0px;
+
+  border-style: solid;
+}
+
+.node {
+  display: flex;
+  flex-direction: column;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 14px;
+  /* identical to box height */
+
+  color: #d6d6d6;
+
+  background-color: #353535;
+
+  cursor: pointer;
+
+  user-select: none;
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+
+  align-items: center;
+
+  height: 24px;
+
+  gap: 7px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.droppable {
+  box-sizing: border-box;
+
+  border-width: 1px 0px 1px 0px;
+
+  border-style: solid;
+}

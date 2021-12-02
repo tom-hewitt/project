@@ -1,0 +1,48 @@
+.window {
+  display: flex;
+  flex-direction: row;
+
+  width: 100%;
+}
+
+.sidebar {
+  margin-left: auto;
+  right: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  flex: none;
+  width: 300px;
+
+  background: #353535;
+
+  z-index: 2;
+}
+
+.subheading {
+  padding: 20px 0px 10px 20px;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 14px;
+  /* identical to box height */
+
+  color: #737373;
+}
+
+.empty {
+  background: #353535;
+
+  height: 100%;
+}
+
+.treeObject {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  gap: 7px;
+}

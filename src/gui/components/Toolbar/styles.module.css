@@ -1,0 +1,44 @@
+.container {
+  position: fixed;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  flex-direction: row;
+
+  justify-content: center;
+
+  z-index: 1;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 5px 0px 20px;
+
+  gap: 15px;
+
+  height: 50px;
+
+  background: #353535;
+  border-radius: 0px 0px 7px 7px;
+
+  flex: none;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  gap: 30px;
+}
+
+.button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  cursor: pointer;
+}
