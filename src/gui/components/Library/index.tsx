@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { Box, Stage } from "@react-three/drei";
+import { Stage } from "@react-three/drei";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { Suspense, useState } from "react";
 import { useStore } from "../../../project";
@@ -9,11 +9,11 @@ import {
   sceneClass,
 } from "../../../project/class";
 import { CreateLevelCommand, level, levelId } from "../../../project/level";
-import { Draggable, DragData, Droppable, Drag } from "../../dnd";
-import { Model, SceneObject, urls } from "../Object";
-import { ExpandIcon } from "../Tree";
+import { Draggable, Droppable, Drag } from "../../dnd";
+import { SceneObject } from "../Object";
 import { MeshIcon } from "../Window";
 import styles from "./styles.module.css";
+import { Model, urls } from "../Object/Mesh";
 
 type Page = "Library" | "Levels" | "Classes" | "Models";
 
