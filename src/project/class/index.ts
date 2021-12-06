@@ -23,7 +23,6 @@ export interface sceneClass extends classDef {
 export class CreateClassCommand extends Command {
   id: string;
   root: string;
-  cube: string;
   name?: string;
   open = true;
 
@@ -32,28 +31,17 @@ export class CreateClassCommand extends Command {
 
     this.id = nanoid();
     this.root = nanoid();
-    this.cube = nanoid();
 
     this.name = name;
   }
 
   execute(store: store) {
-    // Create Default Cube
-    store.project.sceneObjects[this.cube] = {
-      id: this.cube,
-      name: "Duck",
-      type: "Mesh",
-      model: "Duck",
-      parent: this.root,
-      children: [],
-    };
-
     // Create Root
     store.project.sceneObjects[this.root] = {
       id: this.root,
       name: "Root",
       type: "Root",
-      children: [this.cube],
+      children: [],
     };
 
     if (!this.name) {
@@ -93,7 +81,5 @@ export class CreateClassCommand extends Command {
     delete store.project.sceneClasses[this.id];
 
     delete store.project.sceneObjects[this.root];
-
-    delete store.project.sceneObjects[this.cube];
   }
 }

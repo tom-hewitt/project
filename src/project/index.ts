@@ -1,4 +1,4 @@
-import create, { SetState } from "zustand";
+import create from "zustand";
 import { devtools } from "zustand/middleware";
 import produce from "immer";
 import { Command } from "./command";
@@ -8,13 +8,15 @@ import { func } from "./function";
 import { sceneObject } from "./sceneObject";
 import { createEditor, editor } from "../editor";
 import { toast } from "react-hot-toast";
-import { RedoIcon, UndoIcon } from "../gui/components/Toolbar";
+import { ast } from "./ast";
+import { block } from "./blocks";
 
 export interface project {
   sceneClasses: { [key: string]: sceneClass };
   levels: { [key: string]: level };
   functions: { [key: string]: func };
-  asts: {};
+  asts: { [key: string]: ast };
+  blocks: { [key: string]: block };
   sceneObjects: { [key: string]: sceneObject };
   names: {
     classes: {
@@ -31,6 +33,7 @@ export const initialProject: project = {
   levels: {},
   functions: {},
   asts: {},
+  blocks: {},
   sceneObjects: {},
   names: {
     classes: {},
