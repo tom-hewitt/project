@@ -3,12 +3,8 @@ import { Stage } from "@react-three/drei";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { Suspense, useState } from "react";
 import { useStore } from "../../../project";
-import {
-  classId,
-  CreateClassCommand,
-  sceneClass,
-} from "../../../project/class";
-import { CreateLevelCommand, level, levelId } from "../../../project/level";
+import { classId, createClass, sceneClass } from "../../../project/class";
+import { createLevel, level, levelId } from "../../../project/level";
 import { Draggable, Droppable, Drag } from "../../dnd";
 import { SceneObject } from "../Object";
 import { MeshIcon } from "../Window";
@@ -205,7 +201,7 @@ function LevelsPage({ setPage }: LevelsPageProps) {
     <PageBody
       name="Levels"
       length={entries.length}
-      add={() => execute(new CreateLevelCommand())}
+      add={() => execute(createLevel())}
       back={() => setPage("Library")}
     >
       {entries.map(([id, level]) => (
@@ -230,7 +226,7 @@ function ClassesPage({ setPage }: ClassesPageProps) {
     <PageBody
       name="Classes"
       length={entries.length}
-      add={() => execute(new CreateClassCommand())}
+      add={() => execute(createClass())}
       back={() => setPage("Library")}
     >
       {entries.map(([id, classDef]) => (

@@ -1,9 +1,8 @@
 import { Canvas } from "@react-three/fiber";
 import { EffectComposer, Outline } from "@react-three/postprocessing";
 import {
-  CreateInstanceCommand,
-  CreateMeshCommand,
-  CreateObjectCommand,
+  createInstance,
+  createMesh,
   sceneObjectId,
 } from "../../../project/sceneObject";
 import styles from "./styles.module.css";
@@ -34,11 +33,11 @@ export default function Viewport({ id, type }: ViewportProps) {
   const onDrop = ({ data }: Drag) => {
     switch (data.type) {
       case "Class": {
-        execute(new CreateInstanceCommand(data.id, sceneClass.root));
+        execute(createInstance(data.id, sceneClass.root));
         break;
       }
       case "Model": {
-        execute(new CreateMeshCommand(data.name, sceneClass.root));
+        execute(createMesh(data.name, sceneClass.root));
       }
     }
   };

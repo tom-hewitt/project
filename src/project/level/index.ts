@@ -2,86 +2,66 @@ import { nanoid } from "nanoid";
 import { store } from "..";
 import { addTab, tab, removeTabId } from "../../editor";
 import { sceneClass } from "../class";
-import { Command } from "../command";
+import { command } from "../command";
 import { uniqueName } from "../utils";
 
 export type levelId = string;
 
 export interface level extends sceneClass {}
 
-export class CreateLevelCommand extends Command {
-  id: string;
-  root: string;
-  cube: string;
-  name?: string;
-  open = true;
+export const createLevel = (givenName?: string): command => {
+  return (store: store) => {
+    const name = givenName
+      ? givenName
+      : uniqueName(store.project.names, "My Level");
+    const id = nanoid();
+    const root = nanoid();
+    let open = true;
 
-  constructor(name?: string) {
-    super("Create Level");
-    this.id = nanoid();
-    this.root = nanoid();
-    this.cube = nanoid();
+    return {
+      action: `Create Level "${name}""`,
+      execute: (store: store) => {
+        // Create Root
+        store.project.sceneObjects[root] = {
+          id: root,
+          name: "Root",
+          type: "Root",
+          children: [],
+        };
 
-    this.name = name;
-  }
+        // Create Level
+        store.project.levels[id] = {
+          name: name,
+          methods: {},
+          root: root,
+        };
 
-  execute = (store: store) => {
-    // Create Default Cube
-    store.project.sceneObjects[this.cube] = {
-      id: this.cube,
-      name: "Cube",
-      type: "Mesh",
-      model: "Box",
-      parent: this.root,
-      children: [],
+        // Create Name
+        store.project.names[name] = { id, type: "Level" };
+
+        // New Tab
+        const tab: tab = {
+          type: "Class",
+          id: id,
+        };
+
+        if (open) {
+          addTab(store, tab);
+        }
+      },
+      undo: (store: store) => {
+        open = removeTabId(store, id);
+
+        if (!name) {
+          throw new Error();
+        }
+
+        delete store.project.names[name];
+
+        delete store.project.levels[id];
+
+        delete store.project.sceneObjects[root];
+      },
     };
-
-    // Create Root
-    store.project.sceneObjects[this.root] = {
-      id: this.root,
-      name: "Root",
-      type: "Root",
-      children: [this.cube],
-    };
-
-    if (!this.name) {
-      this.name = uniqueName(store.project.names.levels, "My Level");
-    }
-
-    // Create Name
-    store.project.names.levels[this.name] = this.id;
-
-    // Create Level
-    store.project.levels[this.id] = {
-      name: this.name,
-      methods: {},
-      root: this.root,
-    };
-
-    // New Tab
-    const tab: tab = {
-      type: "Level",
-      id: this.id,
-    };
-
-    if (this.open) {
-      addTab(store, tab);
-    }
   };
-
-  undo = (store: store) => {
-    this.open = removeTabId(store, this.id);
-
-    if (!this.name) {
-      throw new Error();
-    }
-
-    delete store.project.names.classes[this.name];
-
-    delete store.project.levels[this.id];
-
-    delete store.project.sceneObjects[this.root];
-
-    delete store.project.sceneObjects[this.cube];
-  };
-}
+};

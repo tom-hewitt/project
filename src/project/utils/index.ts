@@ -1,7 +1,7 @@
-export function uniqueName(names: { [key: string]: any }, prefix: string) {
+export function uniqueName(names: { [key: string]: {} }, prefix: string) {
   let name = prefix;
   let i = 2;
-  while (name in names) {
+  while (names.hasOwnProperty(name)) {
     name = `${prefix} ${i}`;
   }
 

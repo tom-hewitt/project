@@ -1,11 +1,9 @@
-import { project, store } from ".";
+import { store } from ".";
 
-export abstract class Command {
+export type command = (store: store) => commandData;
+
+export type commandData = {
   action: string;
-
-  constructor(action: string) {
-    this.action = action;
-  }
-  abstract execute(store: store): void;
-  abstract undo(store: store): void;
-}
+  execute: (store: store) => void;
+  undo: (store: store) => void;
+};

@@ -1,7 +1,5 @@
-import create, { SetState, GetState } from "zustand";
+import { SetState } from "zustand";
 import produce from "immer";
-import { levelId } from "../project/level";
-import { classId } from "../project/class";
 import { store } from "../project";
 
 export interface editor {

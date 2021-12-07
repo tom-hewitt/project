@@ -4,7 +4,7 @@ import { StateSelector } from "zustand";
 import { store, useStore } from "../../../project";
 import styles from "./styles.module.css";
 import { Draggable, Drag, Droppable } from "../../dnd";
-import { ReparentObjectCommand } from "../../../project/sceneObject";
+import { reparentObject } from "../../../project/sceneObject";
 
 interface node {
   id: string;
@@ -35,7 +35,7 @@ export default function Tree<N extends node>({
     switch (data.type) {
       case "Object": {
         if (data.id !== id) {
-          execute(new ReparentObjectCommand(data.id, id));
+          execute(reparentObject(data.id, id));
         }
       }
       case "Class": {
@@ -97,7 +97,7 @@ export function Node<N extends node>({
     switch (data.type) {
       case "Object": {
         if (data.id !== id) {
-          execute(new ReparentObjectCommand(data.id, id));
+          execute(reparentObject(data.id, id));
         }
       }
       case "Class": {

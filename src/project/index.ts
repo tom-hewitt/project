@@ -1,7 +1,7 @@
 import create from "zustand";
 import { devtools } from "zustand/middleware";
 import produce from "immer";
-import { Command } from "./command";
+import { command, commandData } from "./command";
 import { level } from "./level";
 import { sceneClass } from "./class";
 import { func } from "./function";
@@ -11,6 +11,11 @@ import { toast } from "react-hot-toast";
 import { ast } from "./ast";
 import { block } from "./blocks";
 
+export interface name {
+  id: string;
+  type: "Class" | "Level";
+}
+
 export interface project {
   sceneClasses: { [key: string]: sceneClass };
   levels: { [key: string]: level };
@@ -19,12 +24,7 @@ export interface project {
   blocks: { [key: string]: block };
   sceneObjects: { [key: string]: sceneObject };
   names: {
-    classes: {
-      [key: string]: string;
-    };
-    levels: {
-      [key: string]: string;
-    };
+    [key: string]: name;
   };
 }
 
@@ -35,19 +35,16 @@ export const initialProject: project = {
   asts: {},
   blocks: {},
   sceneObjects: {},
-  names: {
-    classes: {},
-    levels: {},
-  },
+  names: {},
 };
 
 export interface state {
   project: project;
-  history: Command[];
+  history: commandData[];
   index: number;
   canUndo: boolean;
   canRedo: boolean;
-  execute: (command: Command) => void;
+  execute: (command: command) => void;
   undo: () => void;
   redo: () => void;
 }
@@ -63,9 +60,11 @@ export const useStore = create<store>(
     index: 0,
     canUndo: false,
     canRedo: false,
-    execute: (command: Command) => {
+    execute: (c: command) => {
       set(
         produce((store: store) => {
+          const command = c(store);
+
           command.execute(store);
 
           toast(command.action);

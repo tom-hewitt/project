@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import { store } from "..";
 import { classId } from "../class";
-import { Command } from "../command";
+import { command } from "../command";
 
 export type sceneObjectId = string;
 
@@ -34,108 +34,98 @@ export interface instanceObject extends childSceneObject {
 
 export type model = string;
 
-export class CreateObjectCommand extends Command {
-  object: sceneObject & { parent: sceneObjectId };
+export const createObject = (
+  object: sceneObject & { parent: sceneObjectId }
+): command => {
+  return (store: store) => {
+    return {
+      action: `Create Object "${object.name}"`,
+      execute: (store: store) => {
+        store.project.sceneObjects[object.id] = object;
 
-  constructor(object: sceneObject & { parent: sceneObjectId }) {
-    super(`Create Object "${object.name}"`);
+        store.project.sceneObjects[object.parent].children.push(object.id);
+      },
+      undo: (store: store) => {
+        store.project.sceneObjects[object.parent].children =
+          store.project.sceneObjects[object.parent].children.filter(
+            (val) => val !== object.id
+          );
 
-    this.object = object;
-  }
+        delete store.project.sceneObjects[object.id];
+      },
+    };
+  };
+};
 
-  execute(store: store) {
-    store.project.sceneObjects[this.object.id] = this.object;
+export const createInstance = (
+  classId: classId,
+  parent: sceneObjectId
+): command => {
+  const id = nanoid();
 
-    store.project.sceneObjects[this.object.parent].children.push(
-      this.object.id
-    );
-  }
-  undo(store: store) {
-    store.project.sceneObjects[this.object.parent].children =
-      store.project.sceneObjects[this.object.parent].children.filter(
-        (val) => val !== this.object.id
-      );
+  return createObject({
+    id,
+    type: "Instance",
+    name: "Instance",
+    class: classId,
+    parent,
+    children: [],
+  });
+};
 
-    delete store.project.sceneObjects[this.object.id];
-  }
-}
+export const createMesh = (model: string, parent: sceneObjectId): command => {
+  const id = nanoid();
 
-export class CreateInstanceCommand extends CreateObjectCommand {
-  constructor(classId: classId, parent: sceneObjectId) {
-    const id = nanoid();
+  return createObject({
+    id,
+    type: "Mesh",
+    model,
+    parent,
+    name: model,
+    children: [],
+  });
+};
 
-    super({
-      id,
-      type: "Instance",
-      name: "Instance",
-      class: classId,
-      parent,
-      children: [],
-    });
-  }
-}
+export const reparentObject = (
+  id: sceneObjectId,
+  parent: sceneObjectId
+): command => {
+  return (store: store) => {
+    const object = store.project.sceneObjects[id];
 
-export class CreateMeshCommand extends CreateObjectCommand {
-  constructor(model: string, parent: sceneObjectId) {
-    const id = nanoid();
-
-    super({
-      id,
-      type: "Mesh",
-      model,
-      parent,
-      name: model,
-      children: [],
-    });
-  }
-}
-
-export class ReparentObjectCommand extends Command {
-  id: sceneObjectId;
-  oldParent?: sceneObjectId;
-  parent: sceneObjectId;
-
-  constructor(id: sceneObjectId, parent: sceneObjectId) {
-    super("Reparent object");
-
-    console.log(id, parent);
-
-    this.id = id;
-
-    this.parent = parent;
-  }
-
-  execute(store: store) {
-    const object = store.project.sceneObjects[this.id];
-
-    if (object.parent) {
-      store.project.sceneObjects[object.parent].children =
-        store.project.sceneObjects[object.parent].children.filter(
-          (val) => val !== this.id
-        );
-
-      this.oldParent = object.parent;
-
-      object.parent = this.parent;
-
-      store.project.sceneObjects[this.parent].children = [
-        ...store.project.sceneObjects[this.parent].children,
-        this.id,
-      ];
+    if (!object.parent) {
+      throw new Error("Object with no parent!");
     }
-  }
-  undo(store: store) {
-    store.project.sceneObjects[this.parent].children =
-      store.project.sceneObjects[this.parent].children.filter(
-        (val) => val !== this.id
-      );
 
-    const object = store.project.sceneObjects[this.id];
+    const oldParent = object.parent;
+    return {
+      action: "Reparent Object",
+      execute: (store: store) => {
+        // Remove from old parent's children array
+        store.project.sceneObjects[oldParent].children =
+          store.project.sceneObjects[oldParent].children.filter(
+            (val) => val !== id
+          );
 
-    object.parent = this.oldParent;
+        // Set new parent
+        object.parent = parent;
 
-    if (this.oldParent) {
-      store.project.sceneObjects[this.oldParent].children.push(this.id);
-    }
-  }
-}
+        // Add to new parent's children array
+        store.project.sceneObjects[parent].children.push(id);
+      },
+      undo: (store: store) => {
+        // Remove from new parent's children array
+        store.project.sceneObjects[parent].children =
+          store.project.sceneObjects[parent].children.filter(
+            (val) => val !== id
+          );
+
+        // Set old parent again
+        object.parent = oldParent;
+
+        // Add to old parent's children array
+        store.project.sceneObjects[oldParent].children.push(id);
+      },
+    };
+  };
+};
