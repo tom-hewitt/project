@@ -1,12 +1,9 @@
 .container {
   position: fixed;
-  left: 0;
-  right: 0;
 
-  display: flex;
-  flex-direction: row;
-
-  justify-content: center;
+  display: grid;
+  gap: 10px;
+  padding: 10px;
 
   z-index: 1;
 }
@@ -29,10 +26,19 @@
 
 .buttons {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
+  padding: 15px;
 
   gap: 30px;
+
+  background: #b0b0b0;
+  border-radius: 15px;
+}
+
+.tabs {
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .button {

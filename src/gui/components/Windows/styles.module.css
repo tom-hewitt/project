@@ -1,23 +1,41 @@
-.window {
-  display: flex;
-  flex-direction: row;
-
-  width: 100%;
+.canvas {
+  height: 100vh;
 }
 
-.sidebar {
-  margin-left: auto;
-  right: 0;
+.left {
+  position: fixed;
 
+  left: 65px;
+  top: 65px;
+}
+
+.right {
+  position: fixed;
+
+  right: 10px;
+  top: 65px;
+}
+
+.window {
   display: flex;
   flex-direction: column;
+  padding: 0px 0px 20px 0px;
 
-  flex: none;
   width: 300px;
 
-  background: #353535;
+  border-radius: 15px;
 
   z-index: 2;
+}
+
+.name {
+  padding: 20px 0px 10px 20px;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 14px;
 }
 
 .subheading {

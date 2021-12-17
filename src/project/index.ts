@@ -2,8 +2,7 @@ import create from "zustand";
 import { devtools } from "zustand/middleware";
 import produce from "immer";
 import { command, commandData } from "./command";
-import { level } from "./level";
-import { sceneClass } from "./class";
+import { classDef, createClass, sceneClass } from "./class";
 import { func } from "./function";
 import { sceneObject } from "./sceneObject";
 import { createEditor, editor } from "../editor";
@@ -17,8 +16,7 @@ export interface name {
 }
 
 export interface project {
-  sceneClasses: { [key: string]: sceneClass };
-  levels: { [key: string]: level };
+  classes: { [key: string]: classDef };
   functions: { [key: string]: func };
   asts: { [key: string]: ast };
   blocks: { [key: string]: block };
@@ -29,14 +27,21 @@ export interface project {
 }
 
 export const initialProject: project = {
-  sceneClasses: {},
-  levels: {},
+  classes: {},
   functions: {},
   asts: {},
   blocks: {},
   sceneObjects: {},
   names: {},
 };
+
+function defaultProject() {
+  return produce((store: store) => {
+    createClass({ name: "Level 1", children: [], background: 0xc4c4c4 })(
+      store
+    ).execute(store);
+  });
+}
 
 export interface state {
   project: project;
@@ -119,3 +124,5 @@ export const useStore = create<store>(
     },
   }))
 );
+
+useStore.setState(defaultProject());

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { motion } from "framer-motion";
 import { StateSelector } from "zustand";
 import { store, useStore } from "../../../project";
 import styles from "./styles.module.css";
 import { Draggable, Drag, Droppable } from "../../dnd";
 import { reparentObject } from "../../../project/sceneObject";
+import { ThemeContext } from "../../Project";
 
 interface node {
   id: string;
@@ -106,6 +107,12 @@ export function Node<N extends node>({
     }
   };
 
+  const { light } = useContext(ThemeContext);
+
+  const background = light ? "#BABABA" : "#353535";
+
+  const foreground = light ? "#353535" : "#D6D6D6";
+
   return (
     <Droppable id={`tree node ${id}`} onDrop={onDrop}>
       {({ drop, over }) => (
@@ -126,6 +133,7 @@ export function Node<N extends node>({
           <Draggable
             id={`tree node ${id}`}
             data={{ data: { type: "Object", id } }}
+            options={{ activation: { type: "mouseMove" } }}
           >
             {({ drag, handle, overlay, placeholder }) => (
               <motion.div
@@ -140,29 +148,38 @@ export function Node<N extends node>({
                   opacity: overlay ? 0.8 : placeholder ? 0.5 : 1,
                 }}
               >
-                <motion.div
-                  className={styles.content}
-                  initial={{
-                    backgroundColor: isSelected ? "#454545" : "#353535",
-                    paddingLeft: margin,
+                <div
+                  style={{
+                    backgroundColor: background,
+
+                    color: foreground,
                   }}
-                  animate={{
-                    backgroundColor: isSelected ? "#454545" : "#353535",
-                  }}
-                  whileHover={{
-                    backgroundColor: isSelected ? "#454545" : "#3D3D3D",
-                  }}
-                  onClick={() => select(id)}
                 >
-                  {node.children.length ? (
-                    <div onClick={() => setExpanded(!expanded)}>
-                      <ExpandIcon expanded={expanded} />
-                    </div>
-                  ) : (
-                    <NoChildrenIcon />
-                  )}
-                  {children(node)}
-                </motion.div>
+                  <motion.div
+                    className={styles.content}
+                    variants={{
+                      initial: {
+                        backgroundColor: "rgba(126, 126, 126, 0)",
+                        paddingLeft: margin,
+                      },
+                      selected: {
+                        backgroundColor: "rgba(126, 126, 126, 0.3)",
+                      },
+                    }}
+                    initial="initial"
+                    animate={isSelected ? "selected" : "initial"}
+                    onClick={() => select(id)}
+                  >
+                    {node.children.length ? (
+                      <div onClick={() => setExpanded(!expanded)}>
+                        <ExpandIcon expanded={expanded} />
+                      </div>
+                    ) : (
+                      <NoChildrenIcon />
+                    )}
+                    {children(node)}
+                  </motion.div>
+                </div>
                 {expanded ? (
                   <div>
                     {node.children.map((id) => (
@@ -211,7 +228,7 @@ export function ExpandIcon({ expanded }: ExpandProps) {
       initial={expanded ? "expanded" : "hidden"}
       animate={expanded ? "expanded" : "hidden"}
     >
-      <path d="M1.5 3L4 6L6.5 3" stroke="#D6D6D6" strokeOpacity="0.5" />
+      <path d="M1.5 3L4 6L6.5 3" stroke="currentColor" strokeOpacity="0.5" />
     </motion.svg>
   );
 }
@@ -225,7 +242,7 @@ function NoChildrenIcon() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <circle cx="4" cy="4" r="1" fill="#D6D6D6" fillOpacity="0.5" />
+      <circle cx="4" cy="4" r="1" fill="currentColor" fillOpacity="0.5" />
     </svg>
   );
 }

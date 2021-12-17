@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { store } from "..";
+import { store, useStore } from "..";
 import { classId } from "../class";
 import { command } from "../command";
 
@@ -16,6 +16,7 @@ interface baseSceneObject {
 
 export interface rootObject extends baseSceneObject {
   type: "Root";
+  attributes: { background: number };
 }
 
 export interface childSceneObject extends baseSceneObject {
@@ -63,10 +64,12 @@ export const createInstance = (
 ): command => {
   const id = nanoid();
 
+  const name = useStore.getState().project.classes[classId].name;
+
   return createObject({
     id,
     type: "Instance",
-    name: "Instance",
+    name,
     class: classId,
     parent,
     children: [],

@@ -1,0 +1,117 @@
+.addMenu {
+  width: 250px;
+
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+
+  gap: 20px;
+
+  background: #252525;
+  border: 1px solid rgba(214, 214, 214, 0.1);
+  box-sizing: border-box;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.25);
+  border-radius: 15px;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 14px;
+  /* identical to box height */
+
+  color: rgba(214, 214, 214, 0.5);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 20px;
+}
+
+.input {
+  padding: 10px 10px 10px 12px;
+
+  background: #353535;
+  border-radius: 20px;
+
+  border: none;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 12px;
+  /* identical to box height */
+
+  color: #d6d6d6;
+
+  outline: none;
+}
+
+.button {
+  border-radius: 7px;
+  padding: 10px;
+
+  border: none;
+
+  cursor: pointer;
+
+  border: 1px solid #d6d6d6;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 12px;
+  /* identical to box height */
+}
+
+.inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.extends {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 0px 0px 12px;
+
+  gap: 20px;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 14px;
+  /* identical to box height */
+
+  color: #d6d6d6;
+}
+
+.parent {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+
+  border: 1px solid #353535;
+  box-sizing: border-box;
+  border-radius: 25px;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 14px;
+  /* identical to box height */
+
+  color: #ffffff;
+
+  flex-grow: 1;
+}

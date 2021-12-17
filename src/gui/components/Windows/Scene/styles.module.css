@@ -1,0 +1,35 @@
+.subheading {
+  display: flex;
+  flex-direction: row;
+
+  padding: 20px 20px 10px 20px;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 14px;
+  /* identical to box height */
+
+  color: #737373;
+}
+
+.add {
+  margin-left: auto;
+
+  cursor: pointer;
+
+  user-select: none;
+}
+
+.treeObject {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  gap: 7px;
+
+  padding-right: 20px;
+
+  width: 100%;
+}

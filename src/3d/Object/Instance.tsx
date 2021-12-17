@@ -1,5 +1,5 @@
 import { SceneObject } from ".";
-import { useStore } from "../../../project";
+import { useStore } from "../../project";
 
 interface InstanceProps {
   classId: string;
@@ -9,7 +9,7 @@ interface InstanceProps {
 
 export function Instance({ classId, selected, onClick }: InstanceProps) {
   try {
-    const classDef = useStore((store) => store.project.sceneClasses[classId]);
+    const classDef = useStore((store) => store.project.classes[classId]);
 
     if (classDef.root) {
       return (

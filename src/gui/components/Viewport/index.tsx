@@ -1,30 +1,33 @@
 import { Canvas } from "@react-three/fiber";
-import { EffectComposer, Outline } from "@react-three/postprocessing";
 import {
   createInstance,
   createMesh,
+  rootObject,
   sceneObjectId,
 } from "../../../project/sceneObject";
 import styles from "./styles.module.css";
 import { OrbitControls } from "@react-three/drei";
-import { SceneObject } from "../Object";
-import React, { createContext, useState } from "react";
+import { SceneObject } from "../../../3d/Object";
+import React, { useContext, useEffect } from "react";
 import { useStore } from "../../../project";
 import { Drag, Droppable } from "../../dnd";
+import { sceneClass } from "../../../project/class";
+import { ThemeContext } from "../../Project";
+import { isLight } from "../../utils";
+import * as THREE from "three";
 
 interface ViewportProps {
   id: sceneObjectId;
-  type: string;
 }
 
-interface ObjectRef {
-  current: THREE.Object3D;
-}
+export default function Viewport({ id }: ViewportProps) {
+  const sceneClass = useStore(
+    (store) => store.project.classes[id]
+  ) as sceneClass;
 
-export default function Viewport({ id, type }: ViewportProps) {
-  const sceneClass = useStore((store) =>
-    type === "Level" ? store.project.levels[id] : store.project.sceneClasses[id]
-  );
+  if (!sceneClass.root) {
+    throw new Error("Class is not a Scene");
+  }
 
   const execute = useStore((store) => store.execute);
 
@@ -42,6 +45,17 @@ export default function Viewport({ id, type }: ViewportProps) {
     }
   };
 
+  const root = useStore(
+    (store) => store.project.sceneObjects[sceneClass.root]
+  ) as rootObject;
+
+  const { light, setLight } = useContext(ThemeContext);
+
+  useEffect(
+    () => setLight(isLight(new THREE.Color(root.attributes.background))),
+    [root.attributes.background]
+  );
+
   return (
     <Droppable id={`viewport ${id}`} onDrop={onDrop}>
       {({ drop }) => (
@@ -49,16 +63,15 @@ export default function Viewport({ id, type }: ViewportProps) {
           className={styles.canvas}
           dpr={Math.max(window.devicePixelRatio, 2)}
           style={{
-            backgroundColor: type === "Level" ? "#C4C4C4" : "#252525",
+            backgroundColor: new THREE.Color(
+              root.attributes.background
+            ).getStyle(),
           }}
           onPointerMissed={() => selectObject(null)}
           {...drop}
         >
           <OrbitControls />
-          <color
-            attach="background"
-            args={[type === "Level" ? 0xc4c4c4 : 0x252525]}
-          />
+          <color attach="background" args={[root.attributes.background]} />
           <ambientLight />
           <pointLight position={[10, 10, 10]} />
 

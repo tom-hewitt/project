@@ -10,17 +10,28 @@ export type classId = string;
 
 export interface classDef {
   name: string;
-
+  attributes: { [key: string]: attribute };
   methods: { [key: string]: functionId };
-
   root?: sceneObjectId;
 }
+
+export type attribute = {};
 
 export interface sceneClass extends classDef {
   root: sceneObjectId;
 }
 
-export const createClass = (givenName?: string): command => {
+interface createClassOptions {
+  name?: string;
+  background?: number;
+  children?: sceneObjectId[];
+}
+
+export const createClass = ({
+  name: givenName,
+  children = [],
+  background = 0x252525,
+}: createClassOptions): command => {
   return (store: store) => {
     const name = givenName
       ? givenName
@@ -37,14 +48,18 @@ export const createClass = (givenName?: string): command => {
           id: root,
           name: "Root",
           type: "Root",
-          children: [],
+          children,
+          attributes: {
+            background,
+          },
         };
 
         // Create Class
-        store.project.sceneClasses[id] = {
-          name: name,
+        store.project.classes[id] = {
+          name,
+          attributes: {},
           methods: {},
-          root: root,
+          root,
         };
 
         // Create Name
@@ -52,8 +67,7 @@ export const createClass = (givenName?: string): command => {
 
         // New Tab
         const tab: tab = {
-          type: "Class",
-          id: id,
+          id,
         };
 
         if (open) {
@@ -69,7 +83,7 @@ export const createClass = (givenName?: string): command => {
 
         delete store.project.names[name];
 
-        delete store.project.sceneClasses[id];
+        delete store.project.classes[id];
 
         delete store.project.sceneObjects[root];
       },

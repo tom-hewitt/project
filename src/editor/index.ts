@@ -4,9 +4,10 @@ import { store } from "../project";
 
 export interface editor {
   openTabs: { [key: string]: tab };
+  closedTabs: string[];
   tabs: string[];
   selectedTab?: number;
-  openTab: (id: string, type: tabType) => void;
+  openTab: (id: string) => void;
   selectTab: (index: number) => void;
   closeTab: (index: number) => void;
   closeId: (id: string) => void;
@@ -20,16 +21,18 @@ export interface editor {
 
 export const createEditor = (set: SetState<store>): editor => ({
   openTabs: {},
+  closedTabs: [],
   tabs: [],
   selectedTab: 0,
-  openTab: (id, type) => {
+  openTab: (id) => {
     set(
       produce((editor: editor) => {
         if (id in editor.openTabs) {
           editor.selectedTab = editor.tabs.findIndex((val) => val === id);
         } else {
-          addTab(editor, { type, id });
+          addTab(editor, { id });
         }
+        editor.closedTabs = editor.closedTabs.filter((val) => val !== id);
       })
     );
   },
@@ -37,7 +40,14 @@ export const createEditor = (set: SetState<store>): editor => ({
     set({ selectedTab: index });
   },
   closeTab: (index) => {
-    set(produce((editor: editor) => removeTab(editor, index)));
+    set(
+      produce((editor: editor) => {
+        const id = editor.tabs[index];
+        removeTab(editor, index);
+
+        editor.closedTabs.push(id);
+      })
+    );
   },
   closeId: (id: string) => {
     set(produce((editor: editor) => removeTabId(editor, id)));
@@ -54,10 +64,7 @@ export const createEditor = (set: SetState<store>): editor => ({
   },
 });
 
-export type tabType = "Level" | "Class";
-
 export type tab = {
-  type: tabType;
   id: string;
 };
 

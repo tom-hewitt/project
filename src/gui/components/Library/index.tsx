@@ -6,10 +6,10 @@ import { useStore } from "../../../project";
 import { classId, createClass, sceneClass } from "../../../project/class";
 import { createLevel, level, levelId } from "../../../project/level";
 import { Draggable, Droppable, Drag } from "../../dnd";
-import { SceneObject } from "../Object";
-import { MeshIcon } from "../Window";
+import { SceneObject } from "../../../3d/Object";
+import { MeshIcon } from "../Windows";
 import styles from "./styles.module.css";
-import { Model, urls } from "../Object/Mesh";
+import { Model, urls } from "../../../3d/Object/Mesh";
 
 type Page = "Library" | "Levels" | "Classes" | "Models";
 
