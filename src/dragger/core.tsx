@@ -1,98 +1,91 @@
-import { nanoid } from "nanoid";
-import React, {
+import {
   createContext,
+  MutableRefObject,
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import create from "zustand";
-import shallow from "zustand/shallow";
 import { translateToString } from "./utils";
-import { mouseOverCollision } from "./utils/collisions";
 
-export interface Rect {
+class DroppableInfo<Data = any> {
+  ref: MutableRefObject<HTMLElement | null>;
+  children: DroppableInfo<Data>[];
+  z: number;
+  setOver: (over: boolean) => void;
+  onDrop: (data: Data) => void;
+
+  constructor(
+    ref: MutableRefObject<HTMLElement | null>,
+    zIndex: number,
+    children: DroppableInfo<Data>[],
+    setOver: (over: boolean) => void,
+    onDrop: (data: Data) => void
+  ) {
+    if (ref.current) {
+      this.ref = ref;
+      this.children = children;
+      this.z = zIndex;
+      this.setOver = setOver;
+      this.onDrop = onDrop;
+    } else {
+      throw new Error("ref.current is undefined");
+    }
+  }
+
+  get rect(): Rect {
+    if (this.ref.current) {
+      return this.ref.current.getBoundingClientRect();
+    } else {
+      throw new Error("ref.current is undefined");
+    }
+  }
+}
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface Rect {
   top: number;
   left: number;
   width: number;
   height: number;
 }
 
-export interface Position {
-  x: number;
-  y: number;
-}
-
-export interface Drag {
-  ref?: (element: HTMLElement | null) => void;
-}
-
-export interface Drop {
-  ref?: (element: HTMLElement | null) => void;
-}
-
-export interface Handle {
-  onMouseDown?: (event: React.MouseEvent<HTMLElement>) => void;
-}
-
-export type CollisionTest<Data> = (active: Active<Data>) => boolean;
-
-export type CollisionAlgorithm<Data> = (
-  active: Active<Data>,
-  rect: Rect
-) => boolean;
-
-export interface DroppableInfo<Data> {
-  collisionTest: CollisionTest<Data>;
-  onDrop?: (active: Data) => void;
-  onDragOver?: (active: Data) => void;
-}
-
-export interface Active<Data> {
+interface DraggableProps<Data> {
   data: Data;
-  rect: Rect;
-  mousePosition: Position;
-}
-
-export type Activation = MouseDownActivation | MouseMoveActivation;
-
-export interface MouseDownActivation {
-  type: "mouseDown";
-  delay?: number;
-}
-
-export interface MouseMoveActivation {
-  type: "mouseMove";
-  tolerance?: number;
-}
-
-export interface DraggableOptions {
-  activation: Activation;
-}
-
-export type DraggableProps<Data> = {
-  id: string;
-  options?: Partial<DraggableOptions>;
+  options: Partial<DraggableOptions>;
   children: (props: {
     drag: Drag;
     handle: Handle;
     overlay: boolean;
     placeholder: boolean;
   }) => JSX.Element;
-} & (Data extends undefined ? { data?: undefined } : { data: Data });
+}
 
-export interface DroppableProps<Data> {
-  id: string;
-  collision?: CollisionAlgorithm<Data>;
-  onDrop?: (data: Data) => void;
-  onDragOver?: (data: Data) => void;
-  children: (props: {
-    drop: Drop;
-    over: boolean;
-    active?: Data;
-  }) => JSX.Element;
+interface Drag {
+  ref?: (element: HTMLElement | null) => void;
+}
+
+type Activation = MouseDownActivation | MouseMoveActivation;
+
+interface MouseDownActivation {
+  type: "mouseDown";
+  delay?: number;
+}
+
+interface MouseMoveActivation {
+  type: "mouseMove";
+  tolerance?: number;
+}
+
+interface DraggableOptions {
+  activation: Activation;
 }
 
 const defaultDraggableOptions: DraggableOptions = {
@@ -101,182 +94,204 @@ const defaultDraggableOptions: DraggableOptions = {
   },
 };
 
-export default function dragger<Data = undefined>() {
-  const useStore = create<{
-    active?: {
-      id: string;
-      rect: Rect;
-      data: Data;
-    };
-    over?: string;
-    setActive: (
-      active: { id: string; rect: Rect; data: Data } | undefined
-    ) => void;
-    setOver: (over: string | undefined) => void;
-  }>((set) => ({
-    setActive: (active) => {
-      set({ active });
-    },
-    setOver: (over) => {
-      set({ over });
-    },
-  }));
+interface Handle {
+  onMouseDown?: (event: React.MouseEvent<HTMLElement>) => void;
+}
 
-  const droppables: Map<string, DroppableInfo<Data>> = new Map();
+interface DroppableProps<Data> {
+  onDrop: (data: Data) => void;
+  children: (props: { drop: Drop; over: boolean }) => JSX.Element;
+  z?: number;
+}
 
-  const collisions = (active: Active<Data>): string | undefined => {
-    let over: string | undefined = undefined;
+interface Drop {
+  ref?: (element: HTMLElement | null) => void;
+}
 
-    droppables.forEach(({ collisionTest }, id) => {
-      const result = collisionTest(active);
+function pointRectCollision(point: Point, rect: Rect) {
+  return (
+    point.x > rect.left &&
+    point.x < rect.left + rect.width &&
+    point.y > rect.top &&
+    point.y < rect.top + rect.height
+  );
+}
 
-      if (result) {
-        over = id;
+function intersectRec(
+  point: Point,
+  droppables: DroppableInfo[]
+): DroppableInfo | null {
+  for (const droppable of droppables) {
+    if (pointRectCollision(point, droppable.rect)) {
+      const childIntersection = intersectRec(point, droppable.children);
+
+      if (childIntersection === null) {
+        return droppable;
+      } else {
+        return childIntersection;
       }
-    });
+    }
+  }
 
-    return over;
+  return null;
+}
+
+function addChildDroppable(
+  droppables: DroppableInfo[],
+  newChild: DroppableInfo
+) {
+  let i = 0;
+
+  const remove = () => {
+    droppables.splice(i, 1);
   };
 
-  const OverlayContext = createContext(false);
+  while (i < droppables.length) {
+    if (newChild.z > droppables[i].z) {
+      droppables.splice(i, 0, newChild);
+      return remove;
+    }
 
-  const PlaceholderContext = createContext(false);
+    i++;
+  }
+  droppables.push(newChild);
+
+  return remove;
+}
+
+const OverlayContext = createContext(false);
+
+const PlaceholderContext = createContext(false);
+
+export default function dragger<Data>() {
+  const droppables: DroppableInfo[] = [];
+
+  const intersect = (point: Point) => {
+    return intersectRec(point, droppables);
+  };
+
+  const DroppableContext = createContext({
+    register: (droppable: DroppableInfo) =>
+      addChildDroppable(droppables, droppable),
+  });
 
   const Draggable = ({
-    id,
-    data,
     children,
-    options: partialOptions = {},
+    data,
+    options: partialOptions,
   }: DraggableProps<Data>) => {
     const node = useRef<HTMLElement | null>(null);
     const ref = useCallback((element: HTMLElement | null) => {
       node.current = element;
     }, []);
 
-    const overlayRef = useRef<HTMLDivElement | null>(null);
+    const options = {
+      ...defaultDraggableOptions,
+      ...partialOptions,
+    };
 
-    const { isActive, rect, setActive, setOver } = useStore(
-      (store) => ({
-        isActive: store.active?.id === id,
-        rect: store.active?.id === id ? store.active.rect : null,
-        setActive: store.setActive,
-        setOver: store.setOver,
-      }),
-      shallow
-    );
+    const [active, setActive] = useState(false);
 
-    const overlay = useContext(OverlayContext);
+    // Prevents stale use of 'active' in closures
+    const activeRef = useRef(active);
 
-    const options: DraggableOptions = Object.assign(
-      defaultDraggableOptions,
-      partialOptions
-    );
+    useEffect(() => {
+      activeRef.current = active;
+    }, [active]);
 
-    if (overlay) {
-      return children({
-        drag: {},
-        handle: {},
-        overlay: false,
-        placeholder: false,
-      });
-    }
+    const rect = useRef<Rect | null>(null);
 
-    const activate = (initialMousePos: { x: number; y: number }) => {
+    const initialMouse = useRef<Point | null>(null);
+
+    const over = useRef<DroppableInfo | null>(null);
+
+    const activate = (point: Point) => {
       if (node.current) {
-        const rect = node.current.getBoundingClientRect();
-        setActive({ id, rect, data: data as Data });
+        rect.current = node.current.getBoundingClientRect();
 
-        setOver(
-          collisions({
-            rect,
-            data: data as Data,
-            mousePosition: initialMousePos,
-          })
-        );
+        setActive(true);
+
+        calculateOver(point);
+
+        const onMouseUp = () => {
+          setActive(false);
+          if (over.current) {
+            over.current.setOver(false);
+            over.current.onDrop(data);
+          }
+
+          document.removeEventListener("mouseup", onMouseUp);
+        };
+
+        document.addEventListener("mouseup", onMouseUp);
       }
-    };
-
-    const onMouseMove = (event: MouseEvent, initialMousePos: Position) => {
-      const distance = Math.hypot(
-        event.pageX - initialMousePos.x,
-        event.pageY - initialMousePos.y
-      );
-
-      if (
-        useStore.getState().active?.id !== id &&
-        options.activation.type === "mouseMove" &&
-        (options.activation.tolerance === undefined ||
-          distance > options.activation.tolerance)
-      ) {
-        activate(initialMousePos);
-      }
-
-      if (overlayRef.current) {
-        overlayRef.current.style.transform = translateToString({
-          x: event.pageX - initialMousePos.x,
-          y: event.pageY - initialMousePos.y,
-        });
-
-        const { over, setOver } = useStore.getState();
-
-        const newOver = collisions({
-          rect: overlayRef.current.getBoundingClientRect(),
-          data: data as Data,
-          mousePosition: { x: event.pageX, y: event.pageY },
-        });
-
-        if (newOver !== over) {
-          setOver(newOver);
-        }
-      }
-    };
-
-    const onMouseUp = () => {
-      setActive(undefined);
-
-      const { over } = useStore.getState();
-
-      if (over) {
-        const onDrop = droppables.get(over)?.onDrop;
-        if (onDrop) {
-          onDrop(data as Data);
-        }
-      }
-
-      setOver(undefined);
     };
 
     const onMouseDown = (event: React.MouseEvent<HTMLElement>) => {
       event.stopPropagation();
 
-      const handleMouseMove = (e: MouseEvent) => {
-        onMouseMove(e, {
-          x: event.pageX,
-          y: event.pageY,
-        });
-      };
+      const point: Point = { x: event.pageX, y: event.pageY };
 
-      const dispose = () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
-        document.removeEventListener("mouseup", dispose);
-      };
-
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
-      document.addEventListener("mouseup", dispose);
+      initialMouse.current = point;
 
       if (options.activation.type === "mouseDown") {
-        activate({
-          x: event.pageX,
-          y: event.pageY,
+        activate(point);
+      }
+
+      const removeMouseMove = () => {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", removeMouseMove);
+      };
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", removeMouseMove);
+    };
+
+    const calculateOver = (point: Point) => {
+      if (node.current && overlayRef.current && initialMouse.current) {
+        rect.current = node.current.getBoundingClientRect();
+
+        overlayRef.current.style.transform = translateToString({
+          x: point.x - initialMouse.current.x,
+          y: point.y - initialMouse.current.y,
         });
+
+        const newOver = intersect(point);
+
+        if (over.current && over.current !== newOver) {
+          over.current.setOver(false);
+        }
+
+        if (newOver) {
+          newOver.setOver(true);
+        }
+
+        over.current = newOver;
       }
     };
 
+    const onMouseMove = (event: MouseEvent) => {
+      if (activeRef.current) {
+        calculateOver({ x: event.pageX, y: event.pageY });
+      } else if (
+        options.activation.type === "mouseMove" &&
+        initialMouse.current &&
+        (options.activation.tolerance === undefined ||
+          // Distance from initial mouse position > tolerance
+          Math.hypot(
+            event.pageX - initialMouse.current.x,
+            event.pageY - initialMouse.current.y
+          ) > options.activation.tolerance)
+      ) {
+        activate({ x: event.pageX, y: event.pageY });
+      }
+    };
+
+    const overlayRef = useRef<HTMLDivElement | null>(null);
+
     return (
       <>
-        <PlaceholderContext.Provider value={isActive}>
+        <PlaceholderContext.Provider value={active}>
           {children({
             drag: {
               ref,
@@ -285,101 +300,81 @@ export default function dragger<Data = undefined>() {
               onMouseDown,
             },
             overlay: false,
-            placeholder: isActive,
+            placeholder: active,
           })}
         </PlaceholderContext.Provider>
 
-        {isActive && rect
-          ? createPortal(
+        {active && rect.current ? (
+          <OverlayContext.Provider value={true}>
+            {createPortal(
               <div
                 ref={overlayRef}
                 style={{
                   position: "fixed",
                   display: "block",
-                  left: rect.left,
-                  top: rect.top,
-                  width: rect.width,
-                  height: rect.height,
+                  left: rect.current.left,
+                  top: rect.current.top,
+                  width: rect.current.width,
+                  height: rect.current.height,
                   userSelect: "none",
                   zIndex: 99999999,
                 }}
               >
-                <OverlayContext.Provider value={true}>
-                  {children({
-                    drag: {},
-                    handle: {},
-                    overlay: true,
-                    placeholder: false,
-                  })}
-                </OverlayContext.Provider>
+                {children({
+                  drag: {},
+                  handle: {},
+                  overlay: true,
+                  placeholder: false,
+                })}
               </div>,
               document.body
-            )
-          : null}
+            )}
+          </OverlayContext.Provider>
+        ) : null}
       </>
     );
   };
 
-  const Droppable = ({
-    id,
-    collision = mouseOverCollision,
-    onDrop,
-    onDragOver,
-    children,
-  }: DroppableProps<Data>) => {
+  const Droppable = ({ children, z = 0, onDrop }: DroppableProps<Data>) => {
     const node = useRef<HTMLElement | null>(null);
     const ref = useCallback((element: HTMLElement | null) => {
       node.current = element;
     }, []);
 
-    const overId = useStore((state) => state.over);
+    const { register } = useContext(DroppableContext);
 
-    const active = useStore((state) => state.active);
+    const droppables = useRef<DroppableInfo[]>([]);
 
-    useEffect(() => {
-      if (overId === id && active) {
-        if (onDragOver) {
-          onDragOver(active.data);
-        }
-      }
-    }, [active, overId]);
+    const [over, setOver] = useState(false);
 
-    const over = overId === id;
-
-    const overlay = useContext(OverlayContext);
     const placeholder = useContext(PlaceholderContext);
 
-    useEffect(() => {
-      if (!overlay && !placeholder) {
-        if (droppables.has(id)) {
-          throw new Error(
-            `dragger: Spotted multiple droppables with id "${id}"`
-          );
-        }
+    const overlay = useContext(OverlayContext);
 
-        const collisionTest: CollisionTest<Data> = (active) => {
-          if (node.current) {
-            return collision(active, node.current.getBoundingClientRect());
-          }
+    useLayoutEffect(() => {
+      if (!placeholder && !overlay) {
+        const info = new DroppableInfo(
+          node,
+          z,
+          droppables.current,
+          setOver,
+          onDrop
+        );
 
-          return false;
-        };
-
-        droppables.set(id, {
-          collisionTest,
-          onDrop,
-          onDragOver,
-        });
-
-        return () => {
-          droppables.delete(id);
-        };
+        return register(info);
       }
+    }, [placeholder, overlay]);
 
-      return;
-    }, [overlay, placeholder, id, collision, onDrop]);
-
-    return children({ drop: { ref }, over, active: active?.data });
+    return (
+      <DroppableContext.Provider
+        value={{
+          register: (droppable) =>
+            addChildDroppable(droppables.current, droppable),
+        }}
+      >
+        {children({ drop: { ref }, over })}
+      </DroppableContext.Provider>
+    );
   };
 
   return { Draggable, Droppable };
