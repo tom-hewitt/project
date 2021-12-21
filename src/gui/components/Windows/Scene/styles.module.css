@@ -15,11 +15,18 @@
 }
 
 .add {
-  margin-left: auto;
-
   cursor: pointer;
 
   user-select: none;
+}
+
+.delete {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  width: 7px;
+  height: 7px;
 }
 
 .treeObject {

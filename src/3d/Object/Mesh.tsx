@@ -19,6 +19,13 @@ export function Mesh({ model, selected, children, onClick }: MeshProps) {
         </Box>
       );
     }
+    case "Plane": {
+      return (
+        <Plane onClick={onClick} selected={selected}>
+          {children}
+        </Plane>
+      );
+    }
     default: {
       return (
         <Model model={model} selected={selected} onClick={onClick}>
@@ -43,6 +50,27 @@ function Box({ onClick, selected, children }: BoxProps) {
       {mesh && selected ? <boxHelper args={[mesh, 0xd6d6d6]} /> : null}
       <mesh onClick={onClick} ref={setMesh}>
         <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={"hotpink"} />
+      </mesh>
+      {children}
+    </group>
+  );
+}
+
+interface PlaneProps {
+  onClick?: () => void;
+  selected?: boolean;
+  children?: React.ReactNode;
+}
+
+function Plane({ onClick, selected, children }: BoxProps) {
+  const [mesh, setMesh] = useState<THREE.Mesh>();
+
+  return (
+    <group>
+      {mesh && selected ? <boxHelper args={[mesh, 0xd6d6d6]} /> : null}
+      <mesh onClick={onClick} ref={setMesh}>
+        <planeGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color={"hotpink"} />
       </mesh>
       {children}

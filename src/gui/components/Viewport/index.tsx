@@ -57,7 +57,7 @@ export default function Viewport({ id }: ViewportProps) {
   );
 
   return (
-    <Droppable id={`viewport ${id}`} onDrop={onDrop}>
+    <Droppable onDrop={onDrop} z={-1}>
       {({ drop }) => (
         <Canvas
           className={styles.canvas}

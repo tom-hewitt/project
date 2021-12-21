@@ -27,7 +27,13 @@ export interface project {
 }
 
 export const initialProject: project = {
-  classes: {},
+  classes: {
+    Scene: {
+      name: "Scene",
+      attributes: { Scene: { type: "3D Scene" } },
+      methods: {},
+    },
+  },
   functions: {},
   asts: {},
   blocks: {},

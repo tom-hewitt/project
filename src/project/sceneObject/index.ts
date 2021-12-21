@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { store, useStore } from "..";
 import { classId } from "../class";
 import { command } from "../command";
+import { current } from "immer";
 
 export type sceneObjectId = string;
 
@@ -58,6 +59,41 @@ export const createObject = (
   };
 };
 
+export const deleteObject = (id: sceneObjectId): command => {
+  let object: sceneObject;
+  let index: number;
+
+  return () => {
+    return {
+      action: `Delete Object`,
+      execute: (store: store) => {
+        object = current(store.project.sceneObjects[id]);
+
+        if (object.parent) {
+          index = store.project.sceneObjects[object.parent].children.findIndex(
+            (val) => val === id
+          );
+
+          store.project.sceneObjects[object.parent].children.splice(index, 1);
+        }
+
+        delete store.project.sceneObjects[id];
+      },
+      undo: (store: store) => {
+        store.project.sceneObjects[id] = object;
+
+        if (object.parent) {
+          store.project.sceneObjects[object.parent].children.splice(
+            index,
+            0,
+            id
+          );
+        }
+      },
+    };
+  };
+};
+
 export const createInstance = (
   classId: classId,
   parent: sceneObjectId
@@ -101,9 +137,12 @@ export const reparentObject = (
     }
 
     const oldParent = object.parent;
+
     return {
       action: "Reparent Object",
       execute: (store: store) => {
+        const object = store.project.sceneObjects[id];
+
         // Remove from old parent's children array
         store.project.sceneObjects[oldParent].children =
           store.project.sceneObjects[oldParent].children.filter(
@@ -122,6 +161,8 @@ export const reparentObject = (
           store.project.sceneObjects[parent].children.filter(
             (val) => val !== id
           );
+
+        const object = store.project.sceneObjects[id];
 
         // Set old parent again
         object.parent = oldParent;

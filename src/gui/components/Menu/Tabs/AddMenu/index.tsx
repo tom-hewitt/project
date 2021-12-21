@@ -69,7 +69,9 @@ export function AddMenu({ top, left, onClose }: AddMenuProps) {
             }}
             transition={{ duration: 0.2 }}
             onClick={() => {
-              execute(createClass({ name }));
+              if (name.length > 0) {
+                execute(createClass({ name }));
+              }
             }}
           >
             Create

@@ -17,6 +17,8 @@ interface AddMenuProps {
   onClose: () => void;
 }
 
+const primitives = ["Box", "Plane"];
+
 export function AddMenu({ top, parent, onClose }: AddMenuProps) {
   const [page, setPage] = useState("");
 
@@ -47,12 +49,30 @@ export function AddMenu({ top, parent, onClose }: AddMenuProps) {
           </>
         ) : null}
         {page === "Mesh" ? (
-          <Item onClick={() => setPage("Model")}>
-            <MeshIcon /> Model
-          </Item>
+          <>
+            <Item onClick={() => setPage("Model")}>
+              <MeshIcon /> Model
+            </Item>
+            <Item onClick={() => setPage("Primitive")}>
+              <MeshIcon /> Primitive
+            </Item>
+          </>
         ) : null}
         {page === "Model"
           ? Object.keys(urls).map((model) => (
+              <Item
+                onClick={() => {
+                  execute(createMesh(model, parent));
+                  onClose();
+                }}
+                key={model}
+              >
+                {model}
+              </Item>
+            ))
+          : null}
+        {page === "Primitive"
+          ? primitives.map((model) => (
               <Item
                 onClick={() => {
                   execute(createMesh(model, parent));

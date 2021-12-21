@@ -3,6 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import shallow from "zustand/shallow";
 import { tab } from "../../../../editor";
 import { useStore } from "../../../../project";
+import { CloseIcon } from "../../../icons";
 import { ThemeContext } from "../../../Project";
 import { AddMenu } from "./AddMenu";
 import { ClosedTabsMenu } from "./ClosedTabsMenu";
@@ -84,25 +85,6 @@ function Tab({ tab, index, selected }: TabProps) {
         <CloseIcon />
       </div>
     </motion.div>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M1.5 1.5L8.5 8.5M1.5 8.5L8.5 1.5"
-        stroke="currentColor"
-        strokeOpacity="0.5"
-        strokeWidth="1.5"
-      />
-    </svg>
   );
 }
 

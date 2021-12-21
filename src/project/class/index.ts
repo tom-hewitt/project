@@ -3,6 +3,7 @@ import { store } from "..";
 import { addTab, removeTabId, tab } from "../../editor";
 import { command } from "../command";
 import { functionId } from "../function";
+import { literal, type } from "../literal";
 import { sceneObjectId } from "../sceneObject";
 import { uniqueName } from "../utils";
 
@@ -15,7 +16,10 @@ export interface classDef {
   root?: sceneObjectId;
 }
 
-export type attribute = {};
+export type attribute = {
+  type: type;
+  literal?: literal;
+};
 
 export interface sceneClass extends classDef {
   root: sceneObjectId;

@@ -46,7 +46,7 @@ export default function Tree<N extends node>({
   };
 
   return (
-    <Droppable id={`tree ${id}`} onDrop={onDrop}>
+    <Droppable onDrop={onDrop}>
       {({ drop, over }) => (
         <motion.div
           {...drop}
@@ -114,7 +114,7 @@ export function Node<N extends node>({
   const foreground = light ? "#353535" : "#D6D6D6";
 
   return (
-    <Droppable id={`tree node ${id}`} onDrop={onDrop}>
+    <Droppable onDrop={onDrop}>
       {({ drop, over }) => (
         <motion.div
           {...drop}
@@ -131,7 +131,6 @@ export function Node<N extends node>({
           }}
         >
           <Draggable
-            id={`tree node ${id}`}
             data={{ data: { type: "Object", id } }}
             options={{ activation: { type: "mouseMove" } }}
           >
