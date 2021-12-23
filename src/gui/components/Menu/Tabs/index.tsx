@@ -10,11 +10,11 @@ import { ClosedTabsMenu } from "./ClosedTabsMenu";
 import styles from "./styles.module.css";
 
 export function Tabs() {
-  const { openTabs, tabs, selectedTab } = useStore(
+  const { openTabs, tabs, selectedTabIndex } = useStore(
     (store) => ({
       openTabs: store.openTabs,
       tabs: store.tabs,
-      selectedTab: store.selectedTab,
+      selectedTabIndex: store.selectedTabIndex,
     }),
     shallow
   );
@@ -26,7 +26,7 @@ export function Tabs() {
           tab={openTabs[id]}
           index={index}
           key={id}
-          selected={index === selectedTab}
+          selected={index === selectedTabIndex}
         />
       ))}
       <ClosedTabs />
@@ -91,13 +91,7 @@ function Tab({ tab, index, selected }: TabProps) {
 function ClosedTabs() {
   const [focused, setFocused] = useState(false);
 
-  const closedTabs = useStore((store) => store.closedTabs);
-
-  useEffect(() => {
-    if (closedTabs.length === 0 && focused) {
-      setFocused(false);
-    }
-  }, [closedTabs.length]);
+  const closedClasses = useStore((store) => store.closedClasses());
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -105,7 +99,7 @@ function ClosedTabs() {
 
   const { light } = useContext(ThemeContext);
 
-  return closedTabs.length ? (
+  return closedClasses.length ? (
     <>
       <motion.div
         ref={ref}
@@ -133,7 +127,7 @@ function ClosedTabs() {
         }}
         onClick={() => setFocused(true)}
       >
-        {closedTabs.length}
+        {closedClasses.length}
       </motion.div>
       {focused ? (
         <ClosedTabsMenu

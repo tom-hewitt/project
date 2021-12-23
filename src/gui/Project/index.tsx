@@ -1,4 +1,4 @@
-import { Canvas, Windows } from "../components/Windows";
+import { Windows } from "../components/Windows";
 import styles from "./styles.module.css";
 import Toasts from "../components/Toast";
 import Menu from "../components/Menu";
@@ -15,9 +15,8 @@ export default function Project() {
   return (
     <ThemeContext.Provider value={{ light, setLight }}>
       <div className={styles.project}>
-        <Canvas />
-        <Menu />
         <Windows />
+        <Menu />
         <Toasts />
       </div>
     </ThemeContext.Provider>

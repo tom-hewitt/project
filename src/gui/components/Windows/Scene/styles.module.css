@@ -18,6 +18,8 @@
   cursor: pointer;
 
   user-select: none;
+
+  color: #737373;
 }
 
 .delete {
@@ -39,4 +41,15 @@
   padding-right: 20px;
 
   width: 100%;
+
+  white-space: nowrap;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 10px;
+  height: 10px;
 }

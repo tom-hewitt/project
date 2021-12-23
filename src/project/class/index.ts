@@ -10,13 +10,17 @@ import { uniqueName } from "../utils";
 export type classId = string;
 
 export interface classDef {
+  id: classId;
   name: string;
+  parent?: classId;
   attributes: { [key: string]: attribute };
   methods: { [key: string]: functionId };
-  root?: sceneObjectId;
 }
 
 export type attribute = {
+  name: string;
+  inheritedFrom: classId;
+  overridenBy?: classId;
   type: type;
   literal?: literal;
 };
@@ -60,10 +64,18 @@ export const createClass = ({
 
         // Create Class
         store.project.classes[id] = {
+          id,
           name,
-          attributes: {},
+          parent: "Scene",
+          attributes: {
+            Scene: {
+              name: "Scene",
+              inheritedFrom: "Scene",
+              type: "3D Scene",
+              literal: { type: "3D Scene", value: root },
+            },
+          },
           methods: {},
-          root,
         };
 
         // Create Name
@@ -93,4 +105,15 @@ export const createClass = ({
       },
     };
   };
+};
+
+export const getAttributes = (
+  store: store,
+  classId: classId
+): { [key: string]: attribute } => {
+  const classDef = store.project.classes[classId];
+
+  return classDef.parent
+    ? { ...getAttributes(store, classDef.parent), ...classDef.attributes }
+    : { ...classDef.attributes };
 };

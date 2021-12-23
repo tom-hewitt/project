@@ -8,33 +8,11 @@ import { ClassWindow } from "./Class";
 import SceneWindow from "./Scene";
 import styles from "./styles.module.css";
 
-export function Canvas() {
-  const tab = useStore((store) =>
-    store.selectedTab !== undefined
-      ? store.openTabs[store.tabs[store.selectedTab]]
-      : undefined
-  );
-
-  if (tab) {
-    return (
-      <div className={styles.canvas}>
-        <Viewport id={tab.id} />
-      </div>
-    );
-  } else {
-    return <div className={styles.empty}></div>;
-  }
-}
-
 export function Windows() {
-  const tab = useStore((store) =>
-    store.selectedTab !== undefined
-      ? store.openTabs[store.tabs[store.selectedTab]]
-      : undefined
-  );
+  const tab = useStore((store) => store.selectedTab());
 
   if (tab) {
-    return <SceneClassWindows id={tab.id} />;
+    return <ClassWindows id={tab.id} />;
   } else {
     return null;
   }
@@ -62,26 +40,27 @@ export function Window({ children, height }: WindowProps) {
   );
 }
 
-interface SceneClassWindowsProps {
+interface ClassWindowsProps {
   id: string;
 }
 
-function SceneClassWindows({ id }: SceneClassWindowsProps) {
-  const sceneClass = useStore(
-    (store) => store.project.classes[id]
-  ) as sceneClass;
-
-  if (!sceneClass.root) {
-    throw new Error("Class is not a scene");
-  }
+function ClassWindows({ id }: ClassWindowsProps) {
+  const classDef = useStore((store) => store.project.classes[id]);
 
   return (
     <>
+      {classDef.attributes.Scene &&
+      classDef.attributes.Scene.literal?.type === "3D Scene" ? (
+        <>
+          <Viewport rootId={classDef.attributes.Scene.literal.value} />
+          <div className={styles.right}>
+            <SceneWindow root={classDef.attributes.Scene.literal.value} />
+          </div>
+        </>
+      ) : null}
+
       <div className={styles.left}>
-        <ClassWindow sceneClass={sceneClass} />
-      </div>
-      <div className={styles.right}>
-        <SceneWindow root={sceneClass.root} />
+        <ClassWindow classDef={classDef} />
       </div>
     </>
   );

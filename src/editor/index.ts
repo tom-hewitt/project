@@ -1,12 +1,13 @@
-import { SetState } from "zustand";
+import { GetState, SetState } from "zustand";
 import produce from "immer";
 import { store } from "../project";
 
 export interface editor {
   openTabs: { [key: string]: tab };
-  closedTabs: string[];
+  closedClasses: () => string[];
   tabs: string[];
-  selectedTab?: number;
+  selectedTabIndex?: number;
+  selectedTab: () => tab | undefined;
   openTab: (id: string) => void;
   selectTab: (index: number) => void;
   closeTab: (index: number) => void;
@@ -19,33 +20,51 @@ export interface editor {
   selectObject: (object: string | null) => void;
 }
 
-export const createEditor = (set: SetState<store>): editor => ({
+export const createEditor = (
+  set: SetState<store>,
+  get: GetState<store>
+): editor => ({
   openTabs: {},
-  closedTabs: [],
+  closedClasses: () => {
+    const editor = get();
+    const closedClassMap = { ...editor.project.classes };
+    const tabs = editor.tabs;
+
+    for (const id of tabs) {
+      delete closedClassMap[id];
+    }
+
+    delete closedClassMap.Scene;
+
+    return Object.keys(closedClassMap);
+  },
   tabs: [],
-  selectedTab: 0,
+  selectedTabIndex: undefined,
+  selectedTab: () => {
+    const editor = get();
+    return editor.selectedTabIndex !== undefined
+      ? editor.openTabs[editor.tabs[editor.selectedTabIndex]]
+      : undefined;
+  },
   openTab: (id) => {
     set(
       produce((editor: editor) => {
         if (id in editor.openTabs) {
-          editor.selectedTab = editor.tabs.findIndex((val) => val === id);
+          editor.selectedTabIndex = editor.tabs.findIndex((val) => val === id);
         } else {
           addTab(editor, { id });
         }
-        editor.closedTabs = editor.closedTabs.filter((val) => val !== id);
       })
     );
   },
   selectTab: (index) => {
-    set({ selectedTab: index });
+    set({ selectedTabIndex: index });
   },
   closeTab: (index) => {
     set(
       produce((editor: editor) => {
         const id = editor.tabs[index];
         removeTab(editor, index);
-
-        editor.closedTabs.push(id);
       })
     );
   },
@@ -71,7 +90,7 @@ export type tab = {
 export const addTab = (editor: editor, tab: tab) => {
   editor.openTabs[tab.id] = tab;
   editor.tabs = [...editor.tabs, tab.id];
-  editor.selectedTab = editor.tabs.length - 1;
+  editor.selectedTabIndex = editor.tabs.length - 1;
 };
 
 export const removeTab = (editor: editor, index: number) => {
@@ -81,12 +100,12 @@ export const removeTab = (editor: editor, index: number) => {
     ...editor.tabs.slice(0, index),
     ...editor.tabs.slice(index + 1),
   ];
-  editor.selectedTab =
-    editor.selectedTab === undefined
+  editor.selectedTabIndex =
+    editor.selectedTabIndex === undefined
       ? 0
-      : editor.selectedTab < index || editor.selectedTab === 0
-      ? editor.selectedTab
-      : editor.selectedTab - 1;
+      : editor.selectedTabIndex < index || editor.selectedTabIndex === 0
+      ? editor.selectedTabIndex
+      : editor.selectedTabIndex - 1;
 
   delete editor.openTabs[id];
 };

@@ -14,7 +14,7 @@ interface AddMenuProps {
 export function ClosedTabsMenu({ top, left, onClose }: AddMenuProps) {
   const openTab = useStore((store) => store.openTab);
 
-  const closedTabs = useStore((store) => store.closedTabs);
+  const closedClasses = useStore((store) => store.closedClasses());
 
   return (
     <Modal onClose={onClose}>
@@ -25,7 +25,7 @@ export function ClosedTabsMenu({ top, left, onClose }: AddMenuProps) {
         animate={{ scale: 1, opacity: 1 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {closedTabs.map((id) => (
+        {closedClasses.map((id) => (
           <Item id={id} onClick={() => openTab(id)} key={id} />
         ))}
       </motion.div>

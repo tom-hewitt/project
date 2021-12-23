@@ -29,8 +29,11 @@ export interface project {
 export const initialProject: project = {
   classes: {
     Scene: {
+      id: "Scene",
       name: "Scene",
-      attributes: { Scene: { type: "3D Scene" } },
+      attributes: {
+        Scene: { name: "Scene", inheritedFrom: "Scene", type: "3D Scene" },
+      },
       methods: {},
     },
   },
@@ -63,8 +66,8 @@ export interface state {
 export interface store extends state, editor {}
 
 export const useStore = create<store>(
-  devtools((set) => ({
-    ...createEditor(set),
+  devtools((set, get) => ({
+    ...createEditor(set, get),
 
     project: initialProject,
     history: [],

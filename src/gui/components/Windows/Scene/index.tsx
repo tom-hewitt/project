@@ -59,6 +59,7 @@ function AddButton({ parent, hide }: AddButtonProps) {
       <div
         className={styles.add}
         ref={addRef}
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           setShowAdd(true);
@@ -92,7 +93,10 @@ function TreeObject({ object }: TreeObjectProps) {
       initial="initial"
       whileHover="hover"
     >
-      <Icon object={object} /> {object.name}
+      <div className={styles.icon}>
+        <Icon object={object} />
+      </div>
+      {object.name}
       <HorizontalSpacer />
       <motion.div
         className={styles.delete}
@@ -108,6 +112,7 @@ function TreeObject({ object }: TreeObjectProps) {
         <CloseIcon />
       </motion.div>
       <motion.div
+        className={styles.add}
         variants={{
           initial: { opacity: 0 },
           hover: { opacity: 1 },

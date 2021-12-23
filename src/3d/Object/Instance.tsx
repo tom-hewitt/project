@@ -1,5 +1,6 @@
 import { SceneObject } from ".";
 import { useStore } from "../../project";
+import { getAttributes } from "../../project/class";
 
 interface InstanceProps {
   classId: string;
@@ -9,11 +10,15 @@ interface InstanceProps {
 
 export function Instance({ classId, selected, onClick }: InstanceProps) {
   try {
-    const classDef = useStore((store) => store.project.classes[classId]);
+    const attributes = useStore((store) => getAttributes(store, classId));
 
-    if (classDef.root) {
+    if (attributes.Scene && attributes.Scene.literal?.type === "3D Scene") {
       return (
-        <SceneObject id={classDef.root} onClick={onClick} selected={selected} />
+        <SceneObject
+          id={attributes.Scene.literal.value}
+          onClick={onClick}
+          selected={selected}
+        />
       );
     } else {
       throw new Error(`Class with id "${classId}"" is not a scene class`);
