@@ -17,30 +17,29 @@ class DroppableInfo<Data = any> {
   z: number;
   setOver: (over: boolean) => void;
   onDrop: (data: Data) => void;
+  disabled: boolean;
 
   constructor(
     ref: MutableRefObject<HTMLElement | null>,
     zIndex: number,
     children: DroppableInfo<Data>[],
     setOver: (over: boolean) => void,
-    onDrop: (data: Data) => void
+    onDrop: (data: Data) => void,
+    disabled: boolean
   ) {
-    if (ref.current) {
-      this.ref = ref;
-      this.children = children;
-      this.z = zIndex;
-      this.setOver = setOver;
-      this.onDrop = onDrop;
-    } else {
-      throw new Error("ref.current is undefined");
-    }
+    this.ref = ref;
+    this.children = children;
+    this.z = zIndex;
+    this.setOver = setOver;
+    this.onDrop = onDrop;
+    this.disabled = disabled;
   }
 
-  get rect(): Rect {
+  get rect(): Rect | null {
     if (this.ref.current) {
       return this.ref.current.getBoundingClientRect();
     } else {
-      throw new Error("ref.current is undefined");
+      return null;
     }
   }
 }
@@ -102,6 +101,7 @@ interface DroppableProps<Data> {
   onDrop: (data: Data) => void;
   children: (props: { drop: Drop; over: boolean }) => JSX.Element;
   z?: number;
+  disabled?: boolean;
 }
 
 interface Drop {
@@ -122,7 +122,8 @@ function intersectRec(
   droppables: DroppableInfo[]
 ): DroppableInfo | null {
   for (const droppable of droppables) {
-    if (pointRectCollision(point, droppable.rect)) {
+    const rect = droppable.rect;
+    if (!droppable.disabled && rect && pointRectCollision(point, rect)) {
       const childIntersection = intersectRec(point, droppable.children);
 
       if (childIntersection === null) {
@@ -335,7 +336,12 @@ export default function dragger<Data>() {
     );
   };
 
-  const Droppable = ({ children, z = 0, onDrop }: DroppableProps<Data>) => {
+  const Droppable = ({
+    children,
+    z = 0,
+    onDrop,
+    disabled = false,
+  }: DroppableProps<Data>) => {
     const node = useRef<HTMLElement | null>(null);
     const ref = useCallback((element: HTMLElement | null) => {
       node.current = element;
@@ -351,19 +357,32 @@ export default function dragger<Data>() {
 
     const overlay = useContext(OverlayContext);
 
-    useLayoutEffect(() => {
-      if (!placeholder && !overlay) {
-        const info = new DroppableInfo(
-          node,
-          z,
-          droppables.current,
-          setOver,
-          onDrop
-        );
+    const info = useRef<DroppableInfo>(
+      new DroppableInfo(
+        node,
+        z,
+        droppables.current,
+        setOver,
+        onDrop,
+        disabled || placeholder || overlay
+      )
+    );
 
-        return register(info);
-      }
-    }, [placeholder, overlay]);
+    useEffect(() => {
+      info.current.z = z;
+    }, [z]);
+
+    useEffect(() => {
+      info.current.onDrop = onDrop;
+    }, [onDrop]);
+
+    useEffect(() => {
+      info.current.disabled = disabled || placeholder || overlay;
+    }, [disabled, placeholder, overlay]);
+
+    useLayoutEffect(() => {
+      return register(info.current);
+    }, []);
 
     return (
       <DroppableContext.Provider
