@@ -5,11 +5,12 @@
   padding: 15px;
 
   gap: 10px;
-
-  border-width: 1px;
-  border-style: solid;
   box-sizing: border-box;
   border-radius: 15px;
+  border: 1px solid rgba(214, 214, 214, 0.1);
+
+  background: #252525;
+  color: #d6d6d6;
 
   cursor: pointer;
   user-select: none;

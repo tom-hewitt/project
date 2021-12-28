@@ -28,11 +28,22 @@ export interface project {
 
 export const initialProject: project = {
   classes: {
-    Scene: {
-      id: "Scene",
-      name: "Scene",
+    "Object 3D": {
+      id: "Object 3D",
+      name: "Object 3D",
       attributes: {
-        Scene: { name: "Scene", inheritedFrom: "Scene", type: "3D Scene" },
+        Children: {
+          id: "Children",
+          name: "Children",
+          inheritedFrom: "Object 3D",
+          type: {
+            type: "Array",
+            itemType: {
+              type: "Object Reference",
+              objectClass: "Object 3D",
+            },
+          },
+        },
       },
       methods: {},
     },

@@ -1,0 +1,17 @@
+.button {
+  border-radius: 7px;
+  padding: 10px;
+
+  border: none;
+
+  cursor: pointer;
+
+  border: 1px solid #d6d6d6;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 12px;
+  /* identical to box height */
+}

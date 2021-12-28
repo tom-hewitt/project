@@ -3,7 +3,8 @@ import { store } from "..";
 import { addTab, removeTabId, tab } from "../../editor";
 import { command } from "../command";
 import { functionId } from "../function";
-import { literal, type } from "../literal";
+import { baseLiteral, literal } from "../literal";
+import { type } from "../type";
 import { sceneObjectId } from "../sceneObject";
 import { uniqueName } from "../utils";
 
@@ -17,12 +18,13 @@ export interface classDef {
   methods: { [key: string]: functionId };
 }
 
-export type attribute = {
+export type attribute<T extends type = type> = {
+  id: string;
   name: string;
   inheritedFrom: classId;
   overridenBy?: classId;
-  type: type;
-  literal?: literal;
+  type: T;
+  literal?: literal & baseLiteral & T;
 };
 
 export interface sceneClass extends classDef {
@@ -66,13 +68,33 @@ export const createClass = ({
         store.project.classes[id] = {
           id,
           name,
-          parent: "Scene",
+          parent: "Object 3D",
           attributes: {
-            Scene: {
-              name: "Scene",
-              inheritedFrom: "Scene",
-              type: "3D Scene",
-              literal: { type: "3D Scene", value: root },
+            Children: {
+              id: "Children",
+              name: "Children",
+              inheritedFrom: "Object 3D",
+              type: {
+                type: "Array",
+                itemType: {
+                  type: "Object Reference",
+                  objectClass: "Object 3D",
+                },
+              },
+              literal: {
+                type: "Array",
+                itemType: {
+                  type: "Object Reference",
+                  objectClass: "Object 3D",
+                },
+                value: [
+                  {
+                    type: "Object Reference",
+                    objectClass: "Object 3D",
+                    value: root,
+                  },
+                ],
+              },
             },
           },
           methods: {},
@@ -116,4 +138,50 @@ export const getAttributes = (
   return classDef.parent
     ? { ...getAttributes(store, classDef.parent), ...classDef.attributes }
     : { ...classDef.attributes };
+};
+
+export const createAttribute = (
+  classId: classId,
+  name: string,
+  type: type
+): command => {
+  return () => {
+    const id = nanoid();
+    return {
+      action: `Create Attribute "${name}"`,
+      execute: (store: store) => {
+        store.project.classes[classId].attributes[id] = {
+          id,
+          name,
+          type,
+          inheritedFrom: classId,
+        };
+      },
+      undo: (store: store) => {
+        delete store.project.classes[classId].attributes[id];
+      },
+    };
+  };
+};
+
+export const renameAttribute = (
+  classId: classId,
+  attributeId: string,
+  name: string
+): command => {
+  return (store: store) => {
+    const nameBefore =
+      store.project.classes[classId].attributes[attributeId].name;
+
+    return {
+      action: `Rename attribute to "${name}"`,
+      execute: (store: store) => {
+        store.project.classes[classId].attributes[attributeId].name = name;
+      },
+      undo: () => {
+        store.project.classes[classId].attributes[attributeId].name =
+          nameBefore;
+      },
+    };
+  };
 };

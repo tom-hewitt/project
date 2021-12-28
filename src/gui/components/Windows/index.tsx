@@ -24,14 +24,10 @@ interface WindowProps {
 }
 
 export function Window({ children, height }: WindowProps) {
-  const { light } = useContext(ThemeContext);
-
   return (
     <div
       className={styles.window}
       style={{
-        backgroundColor: light ? "#BABABA" : "#353535",
-        color: light ? "#353535" : "#D6D6D6",
         height,
       }}
     >
@@ -50,7 +46,8 @@ function ClassWindows({ id }: ClassWindowsProps) {
   return (
     <>
       {classDef.attributes.Scene &&
-      classDef.attributes.Scene.literal?.type === "3D Scene" ? (
+      classDef.attributes.Scene.literal?.type === "Object Reference" &&
+      classDef.attributes.Scene.literal?.objectClass === "Object 3D" ? (
         <>
           <Viewport rootId={classDef.attributes.Scene.literal.value} />
           <div className={styles.right}>

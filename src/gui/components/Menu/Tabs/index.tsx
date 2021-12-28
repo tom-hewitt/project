@@ -49,30 +49,18 @@ function Tab({ tab, index, selected }: TabProps) {
 
   const name = useStore((store) => store.project.classes[tab.id].name);
 
-  const { light } = useContext(ThemeContext);
-
   return (
     <motion.div
       className={styles.tab}
       onClick={() => selectTab(index)}
       animate={{
-        borderColor: light
-          ? selected
-            ? "rgba(37, 37, 37, 0.1)"
-            : "rgba(37, 37, 37, 0.0)"
-          : selected
+        boxShadow: selected
+          ? "0px 2px 10px rgba(0, 0, 0, 0.35)"
+          : "0px 2px 10px rgba(0, 0, 0, 0)",
+        opacity: selected ? 1 : 0.9,
+        borderColor: selected
           ? "rgba(214, 214, 214, 0.1)"
           : "rgba(214, 214, 214, 0)",
-        boxShadow: selected
-          ? "0px 2px 10px rgba(0, 0, 0, 0.15)"
-          : "0px 2px 10px rgba(0, 0, 0, 0)",
-        opacity: selected ? 1 : 0.6,
-        backgroundColor: light ? "#B0B0B0" : "#353535",
-        color: light ? "#353535" : "#D6D6D6",
-      }}
-      transition={{
-        backgroundColor: { duration: 0 },
-        color: { duration: 0 },
       }}
     >
       {name}

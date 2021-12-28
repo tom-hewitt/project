@@ -1,15 +1,29 @@
+import { classId } from "../class";
+import { objectId } from "../object";
 import { sceneObjectId } from "../sceneObject";
+import { arrayType, objectReferenceType, primitiveType, type } from "../type";
 
-export type type = "Vector 3D" | "3D Scene";
+export type literal = literalVector3D | literalObjectReference | literalArray;
 
-export type literal = literalVector3D | literal3DScene;
+export type typedLiteral<T extends type> = baseLiteral & T;
 
-export interface literalVector3D {
-  type: "Vector 3D";
+export interface baseLiteral {
+  value: unknown;
+}
+
+export interface literalVector3D extends primitiveType, baseLiteral {
   value: vector3d;
 }
 
-export interface literal3DScene {
-  type: "3D Scene";
-  value: sceneObjectId;
+export interface literalObjectReference
+  extends objectReferenceType,
+    baseLiteral {
+  value: objectId;
+}
+
+export interface literalArray<T extends type = type>
+  extends arrayType,
+    baseLiteral {
+  itemType: T;
+  value: typedLiteral<T>[];
 }

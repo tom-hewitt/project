@@ -12,6 +12,8 @@ import { useRef, useState } from "react";
 import { AddMenu } from "./AddMenu";
 import { HorizontalSpacer } from "../../Spacer";
 import { motion } from "framer-motion";
+import { Subheading } from "../../Subheading";
+import { AddButton } from "../../AddButton";
 
 interface SceneWindowProps {
   root: sceneObjectId;
@@ -25,11 +27,11 @@ export default function SceneWindow({ root }: SceneWindowProps) {
 
   return (
     <Window height={200}>
-      <div className={styles.subheading}>
-        Scene
+      <Subheading>
+        CHILDREN
         <HorizontalSpacer />
-        <AddButton parent={root} />
-      </div>
+        <AddObjectButton parent={root} />
+      </Subheading>
       <Tree<sceneObject>
         id={root}
         selector={(id) => (store: store) => store.project.sceneObjects[id]}
@@ -47,7 +49,7 @@ interface AddButtonProps {
   hide?: boolean;
 }
 
-function AddButton({ parent, hide }: AddButtonProps) {
+function AddObjectButton({ parent, hide }: AddButtonProps) {
   const [showAdd, setShowAdd] = useState(false);
 
   const addRef = useRef<HTMLDivElement>(null);
@@ -55,28 +57,7 @@ function AddButton({ parent, hide }: AddButtonProps) {
   const addRect = addRef.current?.getBoundingClientRect();
 
   return (
-    <>
-      <div
-        className={styles.add}
-        ref={addRef}
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowAdd(true);
-        }}
-      >
-        +
-      </div>
-      {showAdd ? (
-        <AddMenu
-          top={addRect ? addRect.bottom + 5 : 0}
-          parent={parent}
-          onClose={() => {
-            setShowAdd(false);
-          }}
-        />
-      ) : null}
-    </>
+    <AddButton>{(props) => <AddMenu parent={parent} {...props} />}</AddButton>
   );
 }
 
@@ -119,7 +100,7 @@ function TreeObject({ object }: TreeObjectProps) {
         }}
         transition={{ duration: 0.1 }}
       >
-        <AddButton parent={object.id} />
+        <AddObjectButton parent={object.id} />
       </motion.div>
     </motion.div>
   );

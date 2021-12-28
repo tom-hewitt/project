@@ -8,7 +8,7 @@ import {
   sceneObjectId,
 } from "../../../../../project/sceneObject";
 import { MeshIcon } from "../../../../icons";
-import Modal from "../../../Modal";
+import { Dropdown } from "../../../Dropdown";
 import styles from "./styles.module.css";
 
 interface AddMenuProps {
@@ -32,73 +32,65 @@ export function AddMenu({ top, parent, onClose }: AddMenuProps) {
   );
 
   return (
-    <Modal onClose={onClose}>
-      <motion.div
-        className={styles.addMenu}
-        style={{ top }}
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {page === "" ? (
-          <>
-            <Item onClick={() => setPage("Mesh")}>
-              <MeshIcon /> Mesh
+    <Dropdown top={top} right={20} onClose={onClose}>
+      {page === "" ? (
+        <>
+          <Item onClick={() => setPage("Mesh")}>
+            <MeshIcon /> Mesh
+          </Item>
+          <Item onClick={() => setPage("Instance")}>Instance</Item>
+        </>
+      ) : null}
+      {page === "Mesh" ? (
+        <>
+          <Item onClick={() => setPage("Model")}>
+            <MeshIcon /> Model
+          </Item>
+          <Item onClick={() => setPage("Primitive")}>
+            <MeshIcon /> Primitive
+          </Item>
+        </>
+      ) : null}
+      {page === "Model"
+        ? Object.keys(urls).map((model) => (
+            <Item
+              onClick={() => {
+                execute(createMesh(model, parent));
+                onClose();
+              }}
+              key={model}
+            >
+              {model}
             </Item>
-            <Item onClick={() => setPage("Instance")}>Instance</Item>
-          </>
-        ) : null}
-        {page === "Mesh" ? (
-          <>
-            <Item onClick={() => setPage("Model")}>
-              <MeshIcon /> Model
+          ))
+        : null}
+      {page === "Primitive"
+        ? primitives.map((model) => (
+            <Item
+              onClick={() => {
+                execute(createMesh(model, parent));
+                onClose();
+              }}
+              key={model}
+            >
+              {model}
             </Item>
-            <Item onClick={() => setPage("Primitive")}>
-              <MeshIcon /> Primitive
+          ))
+        : null}
+      {page === "Instance"
+        ? classes.map(([id, name]) => (
+            <Item
+              onClick={() => {
+                execute(createInstance(id, parent));
+                onClose();
+              }}
+              key={id}
+            >
+              {name}
             </Item>
-          </>
-        ) : null}
-        {page === "Model"
-          ? Object.keys(urls).map((model) => (
-              <Item
-                onClick={() => {
-                  execute(createMesh(model, parent));
-                  onClose();
-                }}
-                key={model}
-              >
-                {model}
-              </Item>
-            ))
-          : null}
-        {page === "Primitive"
-          ? primitives.map((model) => (
-              <Item
-                onClick={() => {
-                  execute(createMesh(model, parent));
-                  onClose();
-                }}
-                key={model}
-              >
-                {model}
-              </Item>
-            ))
-          : null}
-        {page === "Instance"
-          ? classes.map(([id, name]) => (
-              <Item
-                onClick={() => {
-                  execute(createInstance(id, parent));
-                  onClose();
-                }}
-                key={id}
-              >
-                {name}
-              </Item>
-            ))
-          : null}
-      </motion.div>
-    </Modal>
+          ))
+        : null}
+    </Dropdown>
   );
 }
 

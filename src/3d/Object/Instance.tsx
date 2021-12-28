@@ -12,7 +12,11 @@ export function Instance({ classId, selected, onClick }: InstanceProps) {
   try {
     const attributes = useStore((store) => getAttributes(store, classId));
 
-    if (attributes.Scene && attributes.Scene.literal?.type === "3D Scene") {
+    if (
+      attributes.Scene &&
+      attributes.Scene.literal?.type === "Object Reference" &&
+      attributes.Scene.literal.objectClass === "Object 3D"
+    ) {
       return (
         <SceneObject
           id={attributes.Scene.literal.value}
