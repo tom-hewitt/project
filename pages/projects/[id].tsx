@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 
-const LazyEditor = dynamic(() => import("../../src/gui/Project"), {
+const LazyEditor = dynamic(() => import("../../src/editor/gui/Project"), {
   ssr: false,
   loading: () => <p>loading...</p>,
 });

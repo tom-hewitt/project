@@ -1,5 +1,5 @@
-import { useStore } from "../../project";
-import { sceneObject } from "../../project/sceneObject";
+import { useStore } from "../../old/project";
+import { sceneObject } from "../../old/project/sceneObject";
 import React, { Suspense } from "react";
 import { Root } from "./Root";
 import { Instance } from "./Instance";

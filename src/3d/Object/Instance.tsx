@@ -1,6 +1,6 @@
 import { SceneObject } from ".";
-import { useStore } from "../../project";
-import { getAttributes } from "../../project/class";
+import { useStore } from "../../old/project";
+import { getAttributes } from "../../old/project/class";
 
 interface InstanceProps {
   classId: string;

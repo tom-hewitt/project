@@ -1,4 +1,4 @@
-import { primitive } from "../src/project/type";
+import { primitive } from "../src/old/project/type";
 
 export const primitiveTypeColors: Record<primitive, string> = {
   Boolean: "#DA8484",

@@ -1,6 +1,6 @@
 import { useGLTF } from "@react-three/drei";
 import { useMemo, useState } from "react";
-import { model } from "../../project/sceneObject";
+import { model } from "../../old/project/sceneObject";
 import * as THREE from "three";
 
 interface MeshProps {
