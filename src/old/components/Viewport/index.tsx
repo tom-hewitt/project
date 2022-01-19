@@ -10,7 +10,7 @@ import { OrbitControls } from "@react-three/drei";
 import { SceneObject } from "../../../3d/Object";
 import React, { useContext, useEffect } from "react";
 import { useStore } from "../../project";
-import { Drag, Droppable } from "../../dragger/dnd";
+import { Drag, Droppable } from "../../../editor/dragger/dnd";
 import { ThemeContext } from "../Project";
 import { isLight } from "../../utils";
 import * as THREE from "three";

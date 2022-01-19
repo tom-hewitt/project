@@ -1,6 +1,15 @@
-import { asArray, asBoolean, asInteger, asObj, asString, code, obj } from "../";
+import {
+  asArray,
+  asBoolean,
+  asInteger,
+  asObj,
+  asString,
+  BooleanObj,
+  Obj,
+  StringObj,
+} from "../interpreter";
 
-import { library } from "../library";
+import { library } from "../interpreter/library";
 
 export const standardLibrary: library = (builder) => {
   builder
@@ -8,7 +17,7 @@ export const standardLibrary: library = (builder) => {
       name: "Object",
       methods: {
         "To String": builder.createForeignMethod(({ Self }, { callMethod }) => {
-          const attributeToString = ([name, obj]: [string, obj]): string => {
+          const attributeToString = ([name, obj]: [string, Obj]): string => {
             const string = asString(asObj(callMethod(obj, "To String")));
 
             return `${name}: ${string.value}`;
@@ -30,31 +39,21 @@ export const standardLibrary: library = (builder) => {
             }
           }
 
-          return {
-            type: "String",
-            c: "String",
-            value: `${Self.c} {${attributesString}}`,
-          };
+          return new StringObj(`${Self.getClass()} {${attributesString}}`);
         }),
       },
     })
     .createClass({
       name: "Boolean",
       methods: {
-        "To String": builder.createForeignMethod(({ Self }) => ({
-          type: "String",
-          c: "String",
-          value: asBoolean(Self).value ? "True" : "False",
-        })),
+        "To String": builder.createForeignMethod(
+          ({ Self }) => new StringObj(asBoolean(Self).value ? "True" : "False")
+        ),
         And: builder.createForeignMethod(({ Self, Other }) => {
           const selfBoolean = asBoolean(Self);
           const otherBoolean = asBoolean(Other);
 
-          return {
-            type: "Boolean",
-            c: "Boolean",
-            value: selfBoolean.value && otherBoolean.value,
-          };
+          return new BooleanObj(selfBoolean.value && otherBoolean.value);
         }),
       },
     })
@@ -69,11 +68,9 @@ export const standardLibrary: library = (builder) => {
     .createClass({
       name: "Integer",
       methods: {
-        "To String": builder.createForeignMethod(({ Self }) => ({
-          type: "String",
-          c: "String",
-          value: asInteger(Self).value.toString(),
-        })),
+        "To String": builder.createForeignMethod(
+          ({ Self }) => new StringObj(asInteger(Self).value.toString())
+        ),
       },
     })
     .createClass({
@@ -92,11 +89,7 @@ export const standardLibrary: library = (builder) => {
 
           arrayString += "]";
 
-          return {
-            type: "String",
-            c: "String",
-            value: arrayString,
-          };
+          return new StringObj(arrayString);
         }),
       },
     })

@@ -6,6 +6,7 @@ import {
   classDef,
   code,
   executeForeignFunc,
+  foreignClassDef,
   funcRef,
   sourceCode,
 } from ".";
@@ -13,7 +14,9 @@ import {
 /**
  * Class to help build code by hand
  */
-export class CodeBuilder {
+export class CodeBuilder<
+  C extends classDef | foreignClassDef = classDef | foreignClassDef
+> {
   code: code = {
     classes: {},
     asts: {},
@@ -21,7 +24,7 @@ export class CodeBuilder {
     blocks: {},
   };
 
-  createClass = (classDef: classDef): this => {
+  createClass = (classDef: C): this => {
     this.code.classes[classDef.name] = classDef;
 
     return this;
@@ -82,7 +85,7 @@ export class LibraryCodeBuilder extends CodeBuilder {
   };
 }
 
-export class SourceCodeBuilder extends CodeBuilder {
+export class SourceCodeBuilder extends CodeBuilder<classDef> {
   code: sourceCode = {
     classes: {},
     asts: {

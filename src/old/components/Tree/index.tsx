@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { StateSelector } from "zustand";
 import { store, useStore } from "../../project";
 import styles from "./styles.module.css";
-import { Draggable, Drag, Droppable } from "../../dragger/dnd";
+import { Draggable, Drag, Droppable } from "../../../editor/dragger/dnd";
 import { reparentObject } from "../../project/sceneObject";
 import { ThemeContext } from "../Project";
 

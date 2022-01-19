@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { primitiveTypeColors } from "../../../../styles/typeColors";
+import { primitiveTypeColors } from "../../../styles/typeColors";
 import { primitive, primitiveType, type } from "../../project/type";
 import styles from "./styles.module.css";
 

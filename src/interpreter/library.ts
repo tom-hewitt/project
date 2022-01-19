@@ -1,5 +1,5 @@
-import { code } from "./";
-import { LibraryCodeBuilder } from "./code";
+import { code } from "../code";
+import { LibraryCodeBuilder } from "../code/builder";
 
 export type library = (builder: LibraryCodeBuilder) => void;
 
