@@ -1,11 +1,11 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { sourceCode } from "../../../code";
 import { createSourceCode } from "../../../code/builder";
 import { Interpreter } from "../../../interpreter";
 import { library3D } from "../../../libraries/3d";
 import { standardLibrary } from "../../../libraries/standard";
 import AST from "../AST";
-import Block from "../Block";
+import { AutogrowInput } from "../common/input";
 
 // const source: sourceCode = createSourceCode((builder) => {
 //   builder.addToMain(
@@ -52,5 +52,9 @@ import Block from "../Block";
 // }
 
 export default function Project() {
-  return <AST astRef={{ astID: "Main" }} />;
+  return (
+    <div>
+      <AST astRef={{ astID: "Main" }} />
+    </div>
+  );
 }

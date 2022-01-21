@@ -1,24 +1,17 @@
+import { astRef, blockRef } from "../../code";
 import dragger from "./core";
 
-export type DragData = DragPreviewData | DragObjectData | DragModelData;
+export type DragData = BlockDragData;
 
 export interface Drag {
   data: DragData;
 }
 
-export interface DragPreviewData {
-  type: "Class" | "Level";
-  id: string;
-}
-
-export interface DragObjectData {
-  type: "Object";
-  id: string;
-}
-
-export interface DragModelData {
-  type: "Model";
-  name: string;
+export interface BlockDragData {
+  type: "Block";
+  blockRef: blockRef;
+  astRef: astRef;
+  index: number;
 }
 
 export const { Draggable, Droppable } = dragger<Drag>();

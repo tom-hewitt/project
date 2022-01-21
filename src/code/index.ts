@@ -126,8 +126,9 @@ export type objArgs = { [key: string]: Obj };
  */
 export type block =
   | booleanBlock
-  | stringBlock
   | integerBlock
+  | floatBlock
+  | stringBlock
   | arrayBlock
   | setVariableBlock
   | getVariableBlock
@@ -163,17 +164,25 @@ export interface booleanBlock {
 /**
  * A primitive block that evaluates to a string object
  */
-export interface stringBlock {
-  opcode: "String";
-  value: string;
+export interface integerBlock {
+  opcode: "Integer";
+  value: number;
+}
+
+/**
+ * A primitive block that evaluates to a float object
+ */
+export interface floatBlock {
+  opcode: "Float";
+  value: number;
 }
 
 /**
  * A primitive block that evaluates to a string object
  */
-export interface integerBlock {
-  opcode: "Integer";
-  value: number;
+export interface stringBlock {
+  opcode: "String";
+  value: string;
 }
 
 /**

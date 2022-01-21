@@ -55,21 +55,6 @@ export class BooleanObj extends Obj {
 }
 
 /**
- * An Object representing a string value
- */
-export class StringObj extends Obj {
-  value: string;
-
-  constructor(value: string) {
-    super();
-
-    this.value = value;
-  }
-
-  getClass = () => "String";
-}
-
-/**
  * An object representing an integer value
  */
 export class IntegerObj extends Obj {
@@ -82,6 +67,36 @@ export class IntegerObj extends Obj {
   }
 
   getClass = () => "Integer";
+}
+
+/**
+ * An object representing an integer value
+ */
+export class FloatObj extends Obj {
+  value: number;
+
+  constructor(value: number) {
+    super();
+
+    this.value = value;
+  }
+
+  getClass = () => "Float";
+}
+
+/**
+ * An Object representing a string value
+ */
+export class StringObj extends Obj {
+  value: string;
+
+  constructor(value: string) {
+    super();
+
+    this.value = value;
+  }
+
+  getClass = () => "String";
 }
 
 /**
@@ -298,13 +313,16 @@ export class Interpreter {
         // Return a boolean object
         return new BooleanObj(block.value);
       }
-      case "String": {
-        // Return a string object
-        return new StringObj(block.value);
-      }
       case "Integer": {
         // Return an integer object
         return new IntegerObj(block.value);
+      }
+      case "Float": {
+        return new FloatObj(block.value);
+      }
+      case "String": {
+        // Return a string object
+        return new StringObj(block.value);
       }
       case "Array": {
         // Evaluate the items
