@@ -4,7 +4,9 @@ import { createSourceCode } from "../../../code/builder";
 import { Interpreter } from "../../../interpreter";
 import { library3D } from "../../../libraries/3d";
 import { standardLibrary } from "../../../libraries/standard";
+import { DragOverlay } from "../../dragger/dnd";
 import AST from "../AST";
+import { Block } from "../Block";
 import { AutogrowInput } from "../common/input";
 
 // const source: sourceCode = createSourceCode((builder) => {
@@ -53,8 +55,11 @@ import { AutogrowInput } from "../common/input";
 
 export default function Project() {
   return (
-    <div>
+    <>
       <AST astRef={{ astID: "Main" }} />
-    </div>
+      <DragOverlay>
+        {({ data }) => <Block blockRef={data.data.blockRef} />}
+      </DragOverlay>
+    </>
   );
 }

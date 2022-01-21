@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import {
   astRef,
-  block,
+  executableBlock,
   blockRef,
   classDef,
   code,
@@ -52,7 +52,7 @@ export class CodeBuilder<
     return { funcID };
   };
 
-  createBlock = (block: block): blockRef => {
+  createBlock = (block: executableBlock): blockRef => {
     const blockID = nanoid();
 
     this.code.blocks[blockID] = block;

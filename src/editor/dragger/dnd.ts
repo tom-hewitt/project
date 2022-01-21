@@ -1,17 +1,18 @@
 import { astRef, blockRef } from "../../code";
+import { BlockData, useStore } from "../state";
 import dragger from "./core";
 
-export type DragData = BlockDragData;
+export type DragData = BlockData;
 
 export interface Drag {
   data: DragData;
 }
 
-export interface BlockDragData {
-  type: "Block";
-  blockRef: blockRef;
-  astRef: astRef;
-  index: number;
+export interface Drop {
+  data: BlockData;
 }
-
-export const { Draggable, Droppable } = dragger<Drag>();
+export const { Draggable, DragOverlay, Droppable } = dragger<Drag, Drop>({
+  onDrop: (drag, drop) => {
+    useStore.getState().dropBlock(drag.data, drop.data);
+  },
+});

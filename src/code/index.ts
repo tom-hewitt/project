@@ -15,7 +15,7 @@ export interface code {
  * Has a Main Function.
  */
 export interface executableCode extends code {
-  classes: { [key: string]: classDef };
+  blocks: { [key: string]: executableBlock };
   asts: { Main: ast; [key: string]: ast };
 }
 
@@ -23,9 +23,10 @@ export interface executableCode extends code {
  * The structure of code that can be created by the user.
  * The user can't create foreign functions or primitive classes
  */
-export interface sourceCode extends executableCode {
+export interface sourceCode extends code {
   classes: { [key: string]: astClassDef };
   functions: { [key: string]: astFunc };
+  asts: { Main: ast; [key: string]: ast };
 }
 
 export type classDef = astClassDef | foreignClassDef;
@@ -124,7 +125,7 @@ export type objArgs = { [key: string]: Obj };
 /**
  * A Block
  */
-export type block =
+export type executableBlock =
   | booleanBlock
   | integerBlock
   | floatBlock
@@ -144,7 +145,7 @@ export type block =
   | breakBlock
   | doNextFrameBlock;
 
-export type foreignBlock = booleanBlock | stringBlock | arrayBlock;
+export type block = executableBlock | placeholderBlock;
 
 /**
  * A reference to a Block in the code
@@ -153,10 +154,14 @@ export type blockRef = {
   blockID: string;
 };
 
+interface baseBlock {
+  children?: blockRef[];
+}
+
 /**
  * A primitive block that evaluates to a boolean object
  */
-export interface booleanBlock {
+export interface booleanBlock extends baseBlock {
   opcode: "Boolean";
   value: boolean;
 }
@@ -164,7 +169,7 @@ export interface booleanBlock {
 /**
  * A primitive block that evaluates to a string object
  */
-export interface integerBlock {
+export interface integerBlock extends baseBlock {
   opcode: "Integer";
   value: number;
 }
@@ -172,7 +177,7 @@ export interface integerBlock {
 /**
  * A primitive block that evaluates to a float object
  */
-export interface floatBlock {
+export interface floatBlock extends baseBlock {
   opcode: "Float";
   value: number;
 }
@@ -180,7 +185,7 @@ export interface floatBlock {
 /**
  * A primitive block that evaluates to a string object
  */
-export interface stringBlock {
+export interface stringBlock extends baseBlock {
   opcode: "String";
   value: string;
 }
@@ -188,34 +193,35 @@ export interface stringBlock {
 /**
  * A primitive block that evaluates to an array object
  */
-export interface arrayBlock {
+export interface arrayBlock extends baseBlock {
   opcode: "Array";
-  value: blockRef[];
+  children: blockRef[];
 }
 
 /**
  * A block used to construct an instance of a class using its
  * constructor method
  */
-export interface constructBlock {
+export interface constructBlock extends baseBlock {
   opcode: "Construct";
   c: string;
-  arguments: { [key: string]: blockRef };
+  arguments: { [key: string]: number };
+  children: blockRef[];
 }
 
 /**
  * A block used to set the object represented by a variable
  */
-export interface setVariableBlock {
+export interface setVariableBlock extends baseBlock {
   opcode: "Set Variable";
   variable: string;
-  to: blockRef;
+  children: [blockRef];
 }
 
 /**
  * A block used to get the object represented by a variable
  */
-export interface getVariableBlock {
+export interface getVariableBlock extends baseBlock {
   opcode: "Get Variable";
   variable: string;
 }
@@ -223,17 +229,17 @@ export interface getVariableBlock {
 /**
  * A block used to set an object attribute
  */
-export interface setAttributeBlock {
+export interface setAttributeBlock extends baseBlock {
   opcode: "Set Attribute";
-  object: blockRef;
   attribute: string;
-  to: blockRef;
+  // [Object, To]
+  children: [blockRef, blockRef];
 }
 
 /**
  * A block used to get an object attribute
  */
-export interface getAttributeBlock {
+export interface getAttributeBlock extends baseBlock {
   opcode: "Get Attribute";
   object: blockRef;
   attribute: string;
@@ -242,7 +248,7 @@ export interface getAttributeBlock {
 /**
  * A block that calls a function
  */
-export interface functionCallBlock {
+export interface functionCallBlock extends baseBlock {
   opcode: "Function Call";
   function: funcRef;
   arguments: { [key: string]: blockRef };
@@ -251,7 +257,7 @@ export interface functionCallBlock {
 /**
  * A block that calls an object method
  */
-export interface methodCallBlock {
+export interface methodCallBlock extends baseBlock {
   opcode: "Method Call";
   object: blockRef;
   method: string;
@@ -261,7 +267,7 @@ export interface methodCallBlock {
 /**
  * A block that returns from a function
  */
-export interface returnBlock {
+export interface returnBlock extends baseBlock {
   opcode: "Return";
   block?: blockRef;
 }
@@ -269,7 +275,7 @@ export interface returnBlock {
 /**
  * A block representing an if statement
  */
-export interface ifBlock {
+export interface ifBlock extends baseBlock {
   opcode: "If";
   condition: blockRef;
   then: astRef;
@@ -279,7 +285,7 @@ export interface ifBlock {
 /**
  * A block representing a while loop
  */
-export interface whileBlock {
+export interface whileBlock extends baseBlock {
   opcode: "While";
   condition: blockRef;
   inner: astRef;
@@ -288,7 +294,7 @@ export interface whileBlock {
 /**
  * A block representing a for loop.
  */
-export interface forBlock {
+export interface forBlock extends baseBlock {
   opcode: "For";
   /**
    * The name of the variable to create to represent the
@@ -305,14 +311,18 @@ export interface forBlock {
 /**
  * A block that breaks from a loop
  */
-export interface breakBlock {
+export interface breakBlock extends baseBlock {
   opcode: "Break";
 }
 
 /**
  * A block representing an AST to execute on the next frame
  */
-export interface doNextFrameBlock {
+export interface doNextFrameBlock extends baseBlock {
   opcode: "Do Next Frame";
   inner: astRef;
+}
+
+export interface placeholderBlock extends baseBlock {
+  opcode: "Placeholder";
 }

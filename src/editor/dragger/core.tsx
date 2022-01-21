@@ -8,9 +8,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-  useState,
 } from "react";
-import { createPortal } from "react-dom";
 import create from "zustand";
 import shallow from "zustand/shallow";
 import { translateToString } from "./utils";
@@ -25,12 +23,13 @@ interface Rect {
   height: number;
 }
 
-interface DroppableInfo {
+interface DroppableInfo<Data> {
   id: string;
   ref: MutableRefObject<HTMLElement | null>;
   children: string[];
   z: number;
   disabled: boolean;
+  data: Data;
 }
 
 interface Point {
@@ -48,8 +47,7 @@ interface DraggableProps<Data> {
   children: (props: {
     drag: Drag;
     handle: Handle;
-    overlay: boolean;
-    placeholder: boolean;
+    isDragging: boolean;
   }) => JSX.Element;
 }
 
@@ -88,12 +86,10 @@ export interface Handle {
 
 interface DroppableProps<Data> {
   id?: string;
-  onDrop?: (data: Data) => void;
-  onDragOver?: (data: Data) => void;
-  onDragLeave?: (data: Data) => void;
   children: (props: { drop: Drop; over: boolean }) => JSX.Element;
   z?: number;
   disabled?: boolean;
+  data: Data;
 }
 
 interface Drop {
@@ -113,12 +109,22 @@ export const OverlayContext = createContext(false);
 
 export const PlaceholderContext = createContext(false);
 
-export default function dragger<Data>() {
-  const droppables: { [key: string]: DroppableInfo } = {};
+export interface DraggerOptions<DraggableData, DroppableData> {
+  onDrop?: (draggableData: DraggableData, droppableData: DroppableData) => void;
+  onDragOver?: (
+    draggableData: DraggableData,
+    droppableData: DroppableData
+  ) => void;
+}
+
+export default function dragger<DraggableData, DroppableData>(
+  options?: DraggerOptions<DraggableData, DroppableData>
+) {
+  const droppables: { [key: string]: DroppableInfo<DroppableData> } = {};
 
   const rootChildren: string[] = [];
 
-  function intersectRec<Data>(point: Point, children: string[]): string | null {
+  function intersectRec(point: Point, children: string[]): string | null {
     for (const id of children) {
       const droppable = droppables[id];
 
@@ -146,7 +152,7 @@ export default function dragger<Data>() {
    */
   function addChildDroppable(
     parentID: string | undefined,
-    newChild: DroppableInfo
+    newChild: DroppableInfo<DroppableData>
   ) {
     droppables[newChild.id] = newChild;
 
@@ -184,18 +190,20 @@ export default function dragger<Data>() {
 
   const DroppableContext = createContext<string | undefined>(undefined);
 
-  let activeData: Data | null = null;
+  let activeData: DraggableData | null = null;
 
   let rect: Rect | null = null;
 
   let offset: Point | null = null;
 
+  let initialMouse: Point | null = null;
+
   const useStore = create<{
-    active?: {
+    active: {
       id: string;
     } | null;
     activate: (id: string) => void;
-    deactivate: () => void;
+    drop: () => void;
 
     over: string | null;
     setOver: (over: string | null) => void;
@@ -204,22 +212,40 @@ export default function dragger<Data>() {
     activate: (id) => {
       set({ active: { id } });
     },
-    deactivate: () => {
-      set({ active: undefined });
+    drop: () => {
+      set(({ over }) => {
+        if (activeData && over) {
+          options?.onDrop?.(activeData, droppables[over].data);
+        }
+        return { active: null, over: null };
+      });
     },
 
     over: null,
-    setOver: (over) => {
-      set({ over });
+    setOver: (newOver) => {
+      set(({ over }) => {
+        if (newOver !== over) {
+          if (activeData && newOver) {
+            options?.onDragOver?.(activeData, droppables[newOver].data);
+          }
+        }
+      });
     },
   }));
+
+  const updateRect = (mouse: Point) => {
+    if (rect && offset) {
+      rect.left = mouse.x - offset.x;
+      rect.top = mouse.y - offset.y;
+    }
+  };
 
   const Draggable = ({
     id: givenID,
     children,
     data,
     options: partialOptions,
-  }: DraggableProps<Data>) => {
+  }: DraggableProps<DraggableData>) => {
     const node = useRef<HTMLElement | null>(null);
     const ref = useCallback((element: HTMLElement | null) => {
       node.current = element;
@@ -232,12 +258,10 @@ export default function dragger<Data>() {
       ...partialOptions,
     };
 
-    const { isActive, activate, deactivate, setOver } = useStore(
-      ({ active, activate, deactivate, setOver }) => ({
-        isActive: active?.id === id,
+    const { isDragging, activate } = useStore(
+      ({ active, activate }) => ({
+        isDragging: active?.id === id,
         activate,
-        deactivate,
-        setOver,
       }),
       shallow
     );
@@ -256,74 +280,88 @@ export default function dragger<Data>() {
         activeData = data;
 
         activate(id);
-        calculateOver(mouse);
       }
     };
 
-    const initialMouse = useRef<Point | null>(null);
-
     const onMouseDown = (event: React.MouseEvent<HTMLElement>) => {
-      const mouse: Point = { x: event.pageX, y: event.pageY };
-      initialMouse.current = mouse;
+      const mouse: Point = { x: event.clientX, y: event.clientY };
+      initialMouse = mouse;
       if (options.activation.type === "mouseDown") {
         event.stopPropagation();
         activateNode(mouse);
       }
     };
 
-    const onMouseMove = (event: { pageX: number; pageY: number }) => {
-      if (useStore.getState().active) {
-        const mouse = { x: event.pageX, y: event.pageY };
-
-        updateRect(mouse);
-        updateOverlay(mouse);
-        calculateOver(mouse);
-      } else if (
-        options.activation.type === "mouseMove" &&
-        initialMouse.current &&
-        (options.activation.tolerance === undefined ||
-          // Distance from initial mouse position > tolerance
-          Math.hypot(
-            event.pageX - initialMouse.current.x,
-            event.pageY - initialMouse.current.y
-          ) > options.activation.tolerance)
-      ) {
-        const mouse: Point = { x: event.pageX, y: event.pageY };
-        activateNode(mouse);
+    useEffect(() => {
+      if (isDragging) {
+        activeData = data;
       }
-    };
+    }, [isDragging, data]);
 
-    const onMouseUp = () => {
-      deactivate();
-      setOver(null);
-    };
+    return (
+      <PlaceholderContext.Provider value={isDragging}>
+        {children({
+          drag: {
+            ref,
+          },
+          handle: {
+            onMouseDown,
+          },
+          isDragging,
+        })}
+      </PlaceholderContext.Provider>
+    );
+  };
 
-    const overlayRef = useRef<HTMLDivElement | null>(null);
+  interface DragOverlayProps {
+    children: (props: { data: DraggableData }) => JSX.Element;
+  }
 
-    const calculateOver = (point: Point) => {
-      if (node.current && overlayRef.current && initialMouse.current) {
-        setOver(intersect(point));
-      }
-    };
-
-    const updateRect = (mouse: Point) => {
-      if (rect && offset) {
-        rect.left = mouse.x - offset.x;
-        rect.top = mouse.y - offset.y;
-      }
-    };
+  const DragOverlay = ({ children }: DragOverlayProps) => {
+    const ref = useRef<HTMLDivElement | null>(null);
 
     const updateOverlay = (mouse: Point) => {
-      if (overlayRef.current && rect && offset) {
-        overlayRef.current.style.transform = translateToString({
+      if (ref.current && rect && offset) {
+        ref.current.style.transform = translateToString({
           x: rect.left,
           y: rect.top,
         });
       }
     };
 
+    const active = useStore((store) => store.active);
+
+    const { setOver, drop } = useStore(
+      (store) => ({
+        setOver: store.setOver,
+        activate: store.activate,
+        drop: store.drop,
+      }),
+      shallow
+    );
+
+    const onMouseMove = (event: MouseEvent) => {
+      if (useStore.getState().active) {
+        const mouse = { x: event.clientX, y: event.clientY };
+
+        updateRect(mouse);
+        updateOverlay(mouse);
+        calculateOver(mouse);
+      }
+    };
+
+    const calculateOver = (point: Point) => {
+      setOver(intersect(point));
+    };
+
+    const onMouseUp = () => {
+      drop();
+      setOver(null);
+    };
+
     useEffect(() => {
-      if (isActive) {
+      if (active && initialMouse) {
+        calculateOver(initialMouse);
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
 
@@ -332,62 +370,31 @@ export default function dragger<Data>() {
           document.removeEventListener("mouseup", onMouseUp);
         };
       }
-    }, [isActive]);
+    }, [active]);
 
-    useEffect(() => {
-      if (isActive) {
-        activeData = data;
-      }
-    }, [isActive, data]);
-
-    return (
-      <>
-        <PlaceholderContext.Provider value={isActive}>
-          {children({
-            drag: {
-              ref,
-            },
-            handle: {
-              onMouseDown,
-            },
-            overlay: false,
-            placeholder: isActive,
-          })}
-        </PlaceholderContext.Provider>
-
-        {isActive && rect ? (
-          <OverlayContext.Provider value={true}>
-            {createPortal(
-              <div
-                ref={overlayRef}
-                style={{
-                  position: "fixed",
-                  display: "block",
-                  left: 0,
-                  top: 0,
-                  transform: translateToString({
-                    x: rect.left,
-                    y: rect.top,
-                  }),
-                  width: rect.width,
-                  height: rect.height,
-                  userSelect: "none",
-                  zIndex: 99999999,
-                }}
-              >
-                {children({
-                  drag: { key: id },
-                  handle: {},
-                  overlay: true,
-                  placeholder: false,
-                })}
-              </div>,
-              document.body
-            )}
-          </OverlayContext.Provider>
-        ) : null}
-      </>
-    );
+    return active && rect && activeData ? (
+      <OverlayContext.Provider value={true}>
+        <div
+          ref={ref}
+          style={{
+            position: "fixed",
+            display: "block",
+            left: 0,
+            top: 0,
+            transform: translateToString({
+              x: rect.left,
+              y: rect.top,
+            }),
+            width: rect.width,
+            height: rect.height,
+            userSelect: "none",
+            zIndex: 99999999,
+          }}
+        >
+          {children({ data: activeData })}
+        </div>
+      </OverlayContext.Provider>
+    ) : null;
   };
 
   /**
@@ -401,11 +408,9 @@ export default function dragger<Data>() {
     children,
     id: givenID,
     z = 0,
-    onDrop,
-    onDragOver,
-    onDragLeave,
+    data,
     disabled = false,
-  }: DroppableProps<Data>) => {
+  }: DroppableProps<DroppableData>) => {
     // Set up a reference to the droppable HTML DOM element
     const node = useRef<HTMLElement | null>(null);
     const ref = useCallback((element: HTMLElement | null) => {
@@ -418,47 +423,35 @@ export default function dragger<Data>() {
     // in the tree
     const parent = useContext(DroppableContext);
 
-    const over = useStore((store) => store.over);
+    const isOver = useStore((store) => store.over === id);
 
-    const isOver = over === id;
+    console.log(id, isOver);
 
-    const info = useRef<DroppableInfo>({
+    const isPlaceholder = useContext(PlaceholderContext);
+
+    const isOverlay = useContext(OverlayContext);
+
+    const info = useRef<DroppableInfo<DroppableData>>({
       id,
       ref: node,
       children: [],
       z,
       disabled,
+      data,
     });
 
-    useLayoutEffect(() => {
+    const cleanup = useMemo(() => {
+      info.current.id = id;
+      info.current.ref = node;
       info.current.z = z;
+      info.current.disabled = disabled || isPlaceholder || isOverlay;
 
       return addChildDroppable(parent, info.current);
-    }, [z]);
+    }, [id, node, z, disabled, isPlaceholder, isOverlay]);
 
-    // When the component's disabled property changes, mark the droppable
-    // info as disabled
-    useEffect(() => {
-      info.current.disabled = disabled;
-    }, [disabled]);
-
-    useEffect(() => {
-      if (isOver) {
-        if (activeData) {
-          onDragOver?.(activeData);
-        }
-      } else {
-        if (!useStore.getState().active) {
-          if (activeData) {
-            onDrop?.(activeData);
-          }
-        } else {
-          if (activeData) {
-            onDragLeave?.(activeData);
-          }
-        }
-      }
-    }, [isOver]);
+    useLayoutEffect(() => {
+      return cleanup;
+    }, []);
 
     return (
       <DroppableContext.Provider value={id}>
@@ -467,5 +460,5 @@ export default function dragger<Data>() {
     );
   };
 
-  return { Draggable, Droppable };
+  return { Draggable, DragOverlay, Droppable };
 }

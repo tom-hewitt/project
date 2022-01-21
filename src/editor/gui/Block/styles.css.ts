@@ -11,7 +11,7 @@ export const blockStyle = style({
   borderStyle: "solid",
   boxSizing: "border-box",
   borderRadius: "7px",
-  backgroundColor: "#353535",
+  backgroundColor: "#2E2E2E",
   width: "fit-content",
 });
 
@@ -20,5 +20,14 @@ export const inputStyle = style([
   style({
     background: "none",
     border: "none",
+  }),
+]);
+
+export const placeholderStyle = style([
+  text,
+  style({
+    padding: "5px 7px",
+    background: "#353535",
+    borderRadius: 14,
   }),
 ]);

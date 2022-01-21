@@ -5,6 +5,7 @@ import {
   blockArgs,
   blockRef,
   code,
+  executableCode,
   funcRef,
   objArgs,
   sourceCode,
@@ -203,7 +204,7 @@ export class Interpreter {
   /**
    * The code to interpret
    */
-  code: code;
+  code: executableCode;
 
   /**
    * Prepares an interpreter to be run

@@ -1,11 +1,12 @@
 import { useStore } from "../../state";
 import { blockRef } from "../../../code";
-import { blockStyle, inputStyle } from "./styles.css";
+import { blockStyle, inputStyle, placeholderStyle } from "./styles.css";
 import { pointer, pointerText, text } from "../../../styles/globals.css";
-import ObjectIcon from "../common/icons";
+import { ObjectIcon, ArrayIcon } from "../common/icons";
 import { typeColors } from "../../../styles/typeColors";
 import {
   forwardRef,
+  memo,
   ReactNode,
   useContext,
   useEffect,
@@ -19,6 +20,7 @@ import {
   PlaceholderContext,
 } from "../../dragger/core";
 import { AutogrowInput } from "../common/input";
+import { Draggable, Droppable } from "../../dragger/dnd";
 
 interface BlockProps {
   blockRef: blockRef;
@@ -32,6 +34,9 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
     const setBlock = useStore((store) => store.setBlock);
 
     switch (block.opcode) {
+      case "Placeholder": {
+        return <div className={placeholderStyle}>+</div>;
+      }
       case "Boolean": {
         return (
           <PrimitiveBlock
@@ -104,6 +109,22 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
           </PrimitiveBlock>
         );
       }
+      case "Array": {
+        return (
+          <BlockContainer ref={ref} onMouseDown={onMouseDown}>
+            <ArrayIcon />
+            {block.children.map((child, index) => (
+              <ChildBlock
+                blockRef={child}
+                parent={blockRef}
+                index={index}
+                key={child.blockID}
+              />
+            ))}
+            <span className={pointerText}>+</span>
+          </BlockContainer>
+        );
+      }
 
       default: {
         return <div>unimplemented</div>;
@@ -111,6 +132,35 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
     }
   }
 );
+
+interface ChildBlockProps {
+  blockRef: blockRef;
+  parent: blockRef;
+  index: number;
+}
+
+function ChildBlock({ blockRef, parent, index }: ChildBlockProps) {
+  return (
+    <Droppable
+      id={blockRef.blockID}
+      data={{ data: { type: "Child Block", parent, blockRef, index } }}
+    >
+      {({ drop, over }) => (
+        <div style={{ outline: over ? "1px solid red" : undefined }} {...drop}>
+          <Draggable
+            data={{ data: { type: "Child Block", parent, blockRef, index } }}
+          >
+            {({ drag, handle, isDragging }) => (
+              <div style={{ opacity: isDragging ? 0.5 : 1 }}>
+                <Block blockRef={blockRef} {...drag} {...handle} />
+              </div>
+            )}
+          </Draggable>
+        </div>
+      )}
+    </Droppable>
+  );
+}
 
 interface BlockContainerProps extends Handle {
   children: ReactNode;
