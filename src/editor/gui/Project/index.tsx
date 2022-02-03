@@ -1,65 +1,81 @@
-import { useRef, useState } from "react";
-import { sourceCode } from "../../../code";
-import { createSourceCode } from "../../../code/builder";
-import { Interpreter } from "../../../interpreter";
-import { library3D } from "../../../libraries/3d";
-import { standardLibrary } from "../../../libraries/standard";
-import { DragOverlay } from "../../dragger/dnd";
-import AST from "../AST";
-import { Block } from "../Block";
-import { AutogrowInput } from "../common/input";
-
-// const source: sourceCode = createSourceCode((builder) => {
-//   builder.addToMain(
-//     builder.createBlock({
-//       opcode: "Construct",
-//       c: "3D Renderer",
-//       arguments: {
-//         Root: builder.createBlock({
-//           opcode: "Construct",
-//           c: "3D Object",
-//           arguments: {
-//             Children: builder.createBlock({
-//               opcode: "Array",
-//               value: [],
-//             }),
-//           },
-//         }),
-//       },
-//     })
-//   );
-// });
-
-// export default function Project() {
-//   const canvas = useRef<HTMLCanvasElement>(null);
-
-//   return (
-//     <div className="App">
-//       <div style={{ display: "flex", flexDirection: "column" }}>
-//         <button
-//           onClick={() =>
-//             new Interpreter(
-//               source,
-//               standardLibrary,
-//               library3D(canvas.current!)
-//             ).run()
-//           }
-//         >
-//           Run
-//         </button>
-//         <canvas ref={canvas} />
-//       </div>
-//     </div>
-//   );
-// }
+import { ReactNode, useState } from "react";
+import { ClassIcon } from "../../../old/icons";
+import { DragOverlay, useActive } from "../../dragger/dnd";
+import { BlockRef } from "../Block";
+import { PaletteBlock } from "../BlockPalette";
+import { ClassesMenu } from "../ClassesMenu";
+import { ClassWindow } from "../ClassWindow";
+import { Player } from "../Player";
+import { Sidebar } from "../Sidebar";
+import { projectStyle } from "./styles.css";
 
 export default function Project() {
   return (
     <>
-      <AST astRef={{ astID: "Main" }} />
-      <DragOverlay>
-        {({ data }) => <Block blockRef={data.data.blockRef} />}
-      </DragOverlay>
+      <div className={projectStyle}>
+        <Main />
+        <Overlay />
+      </div>
     </>
   );
 }
+
+export function Main() {
+  const [selected, select] = useState<string | null>(null);
+
+  const [playing, setPlaying] = useState(false);
+
+  return (
+    <>
+      <Sidebar
+        goHome={() => {
+          select(null);
+          setPlaying(false);
+        }}
+        play={() => setPlaying(true)}
+      />
+      {playing ? (
+        <Player />
+      ) : selected ? (
+        <ClassWindow c={selected} />
+      ) : (
+        <ClassesMenu onSelect={select} />
+      )}
+    </>
+  );
+}
+
+const Overlay = () => {
+  const { data } = useActive();
+
+  if (!data) {
+    return null;
+  }
+
+  switch (data.data.type) {
+    case "Function Block": {
+      throw new Error();
+    }
+    case "Attribute Block":
+    case "Child Block": {
+      return (
+        <DragOverlay>
+          <div style={{ opacity: 0.9, cursor: "grabbing" }}>
+            {data.data.blockRef.type === "Concrete" ? (
+              <BlockRef blockRef={data.data.blockRef} name="overlay" dragging />
+            ) : null}
+          </div>
+        </DragOverlay>
+      );
+    }
+    case "Palette Block": {
+      return (
+        <DragOverlay>
+          <div style={{ opacity: 0.9, cursor: "grabbing" }}>
+            <PaletteBlock block={data.data.block} id="overlay" dragging />
+          </div>
+        </DragOverlay>
+      );
+    }
+  }
+};

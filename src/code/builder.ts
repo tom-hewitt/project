@@ -1,63 +1,87 @@
 import { nanoid } from "nanoid";
 import {
-  astRef,
   executableBlock,
-  blockRef,
   classDef,
   code,
   executeForeignFunc,
-  foreignClassDef,
   funcRef,
   sourceCode,
+  func,
+  concreteBlockRef,
+  method,
+  attribute,
 } from ".";
 
 /**
  * Class to help build code by hand
  */
-export class CodeBuilder<
-  C extends classDef | foreignClassDef = classDef | foreignClassDef
-> {
+export class CodeBuilder {
   code: code = {
     classes: {},
-    asts: {},
     functions: {},
     blocks: {},
   };
 
-  createClass = (classDef: C): this => {
+  createClass = (classDef: classDef): this => {
     this.code.classes[classDef.name] = classDef;
 
     return this;
   };
 
-  createAST = (...blocks: blockRef[]): astRef => {
-    const astID = nanoid();
+  createFunction = (func: func, id?: string): this => {
+    id = id ? id : func.name;
 
-    this.code.asts[astID] = { blocks };
-
-    return { astID };
-  };
-
-  createFunction = (name: string, ...blocks: blockRef[]): this => {
-    this.code.functions[name] = { type: "AST", ast: this.createAST(...blocks) };
+    this.code.functions[id] = func;
 
     return this;
   };
 
-  createMethod = (...blocks: blockRef[]): funcRef => {
+  createMethod = (
+    inheritedFrom: string,
+    name: string,
+    params: string[],
+    ...blocks: concreteBlockRef[]
+  ): method => {
     const funcID = nanoid();
 
-    this.createFunction(funcID, ...blocks);
+    const block = this.createSequence(...blocks);
 
-    return { funcID };
+    this.createFunction(
+      {
+        name,
+        type: "AST",
+        params,
+        block,
+      },
+      funcID
+    );
+
+    return { inheritedFrom, funcRef: { funcID } };
   };
 
-  createBlock = (block: executableBlock): blockRef => {
+  createAttribute = (
+    inheritedFrom: string,
+    blockRef: concreteBlockRef
+  ): attribute => {
+    return {
+      inheritedFrom,
+      blockRef,
+    };
+  };
+
+  createBlock = (block: executableBlock): concreteBlockRef => {
     const blockID = nanoid();
 
     this.code.blocks[blockID] = block;
 
-    return { blockID };
+    return { type: "Concrete", blockID, return: block.return };
+  };
+
+  createSequence = (...children: concreteBlockRef[]): concreteBlockRef => {
+    return this.createBlock({
+      opcode: "Sequence",
+      children,
+    });
   };
 }
 
@@ -67,40 +91,47 @@ export class LibraryCodeBuilder extends CodeBuilder {
     this.code = code;
   }
 
-  createForeignFunc = (name: string, execute: executeForeignFunc): this => {
+  createForeignFunc = (
+    name: string,
+    params: string[],
+    execute: executeForeignFunc
+  ): this => {
     this.code.functions[name] = {
+      name,
       type: "Foreign",
+      params,
       execute,
     };
 
     return this;
   };
 
-  createForeignMethod = (execute: executeForeignFunc): funcRef => {
+  createForeignMethod = (
+    inheritedFrom: string,
+    params: string[],
+    execute: executeForeignFunc
+  ): method => {
     const funcID = nanoid();
 
-    this.createForeignFunc(funcID, execute);
+    this.createForeignFunc(funcID, params, execute);
 
-    return { funcID };
+    return { inheritedFrom, funcRef: { funcID } };
   };
 }
 
-export class SourceCodeBuilder extends CodeBuilder<classDef> {
+export class SourceCodeBuilder extends CodeBuilder {
   code: sourceCode = {
-    classes: {},
-    asts: {
-      Main: { blocks: [] },
+    classes: {
+      Program: {
+        name: "Project",
+        attributes: {},
+        methods: {
+          Main: this.createMethod("Project", "Main", []),
+        },
+      },
     },
     functions: {},
     blocks: {},
-  };
-
-  constructor() {
-    super();
-  }
-
-  addToMain = (...blocks: blockRef[]) => {
-    this.code.asts.Main.blocks.push(...blocks);
   };
 }
 

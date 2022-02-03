@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ReactNode, useState } from "react";
-import { urls } from "../../../../../3d/Object/Mesh";
+import { urls } from "../../../../3d/Object/Mesh";
 import { useStore } from "../../../../project";
 import {
   createInstance,

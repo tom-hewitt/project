@@ -7,7 +7,7 @@ import {
 } from "../../project/sceneObject";
 import styles from "./styles.module.css";
 import { OrbitControls } from "@react-three/drei";
-import { SceneObject } from "../../../3d/Object";
+import { SceneObject } from "../../3d/Object";
 import React, { useContext, useEffect } from "react";
 import { useStore } from "../../project";
 import { Drag, Droppable } from "../../../editor/dragger/dnd";

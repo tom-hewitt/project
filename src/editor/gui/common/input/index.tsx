@@ -6,10 +6,11 @@ interface AutogrowInputProps {
   onChange: (value: string) => void;
   onMouseDown?: MouseEventHandler<HTMLInputElement>;
   onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
+  onBlur?: () => void;
 }
 
 export const AutogrowInput = forwardRef<HTMLInputElement, AutogrowInputProps>(
-  ({ value, onChange, onMouseDown, onKeyDown }, ref) => {
+  ({ value, onChange, onMouseDown, onKeyDown, onBlur }, ref) => {
     return (
       <div className={grid}>
         <input
@@ -19,6 +20,7 @@ export const AutogrowInput = forwardRef<HTMLInputElement, AutogrowInputProps>(
           onChange={(e) => onChange(e.target.value)}
           onMouseDown={onMouseDown}
           onKeyDown={onKeyDown}
+          onBlur={onBlur}
           size={1}
         />
         <span className={shadowElement}>{value}</span>

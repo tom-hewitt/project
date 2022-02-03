@@ -1,22 +1,19 @@
-import { Obj } from "../interpreter";
+import { obj } from "../interpreter";
 
 /**
  * The structure of code, including libraries
  */
 export interface code {
   classes: { [key: string]: classDef };
-  asts: { [key: string]: ast };
   functions: { [key: string]: func };
   blocks: { [key: string]: block };
 }
-
 /**
  * The structure of code that can be executed by the interpreter.
  * Has a Main Function.
  */
 export interface executableCode extends code {
   blocks: { [key: string]: executableBlock };
-  asts: { Main: ast; [key: string]: ast };
 }
 
 /**
@@ -24,60 +21,28 @@ export interface executableCode extends code {
  * The user can't create foreign functions or primitive classes
  */
 export interface sourceCode extends code {
-  classes: { [key: string]: astClassDef };
-  functions: { [key: string]: astFunc };
-  asts: { Main: ast; [key: string]: ast };
+  classes: { Program: classDef; [key: string]: classDef };
+  functions: { [key: string]: blockFunc };
 }
-
-export type classDef = astClassDef | foreignClassDef;
 
 /**
  * A Class Definition
  */
-export interface astClassDef {
+export interface classDef {
   name: string;
   super?: string;
-  type?: "AST";
-  methods: { [key: string]: funcRef };
+  methods: { [key: string]: method };
+  attributes: { [key: string]: attribute };
 }
 
-/**
- * A foreign class definition
- */
-export interface foreignClassDef {
-  name: string;
-  super?: string;
-  type: "Foreign";
-  Construct: new () => Obj;
-  methods: { [key: string]: funcRef };
+export interface attribute {
+  inheritedFrom: string;
+  blockRef: childBlockRef;
 }
 
-/**
- * A reference to an AST in the code
- */
-export type astRef = {
-  astID: string;
-};
-
-/**
- * An Abstract Syntax Tree containing blocks
- */
-export interface ast {
-  /**
-   * References to the sequence of top-level child blocks within this AST
-   */
-  blocks: blockRef[];
-}
-
-/**
- * A recursive representation of a variable/attribute
- */
-export interface variableRef {
-  name: string;
-  /**
-   * The child attribute that this reference is referring to
-   */
-  attribute?: variableRef;
+export interface method {
+  inheritedFrom: string;
+  funcRef: funcRef;
 }
 
 /**
@@ -90,42 +55,55 @@ export type funcRef = {
 /**
  * A Function, either with an AST or foreign interface
  */
-export type func = astFunc | foreignFunc;
+export type func = blockFunc | foreignFunc;
 
 /**
- * A regular function with an AST
+ * A regular function made up of blocks
  */
-export interface astFunc {
+export interface blockFunc {
   type: "AST";
-  ast: astRef;
+  block: concreteBlockRef;
+  name: string;
+  params: string[];
 }
 
 /**
  * A Foreign Function implemented in another language
  */
 export interface foreignFunc {
+  name: string;
   type: "Foreign";
   execute: executeForeignFunc;
+  params: string[];
 }
 
 export type executeForeignFunc = (
-  args: { [key: string]: Obj },
+  args: { [key: string]: obj },
   callbacks: {
-    getAttribute: (obj: Obj, attribute: string) => Obj;
-    setAttribute: (obj: Obj, attribute: string, to: Obj) => void;
-    callMethod: (obj: Obj, method: string, args?: objArgs) => Obj | null;
-    callFunction: (funcRef: funcRef, args?: objArgs) => Obj | null;
+    getAttribute: (obj: obj, attribute: string) => obj;
+    setAttribute: (obj: obj, attribute: string, to: obj) => void;
+    callMethod: (obj: obj, method: string, args?: objArgs) => obj | null;
+    callFunction: (funcRef: funcRef, args?: objArgs) => obj | null;
   }
-) => Obj | null;
+) => obj | null;
 
-export type blockArgs = { [key: string]: blockRef };
+export type blockArgs = { [key: string]: childBlockRef };
 
-export type objArgs = { [key: string]: Obj };
+export type objArgs = { [key: string]: obj };
+
+export type typeDef = {
+  c: string;
+  generics?: { [key: string]: typeDef };
+  inferrable?: boolean;
+};
+
+export type block = executableBlock;
 
 /**
  * A Block
  */
 export type executableBlock =
+  | sequenceBlock
   | booleanBlock
   | integerBlock
   | floatBlock
@@ -145,17 +123,32 @@ export type executableBlock =
   | breakBlock
   | doNextFrameBlock;
 
-export type block = executableBlock | placeholderBlock;
-
 /**
  * A reference to a Block in the code
  */
-export type blockRef = {
+export type childBlockRef = concreteBlockRef | placeholderChildBlockRef;
+
+export interface concreteBlockRef {
+  type: "Concrete";
   blockID: string;
-};
+  return?: typeDef;
+}
+
+export interface placeholderChildBlockRef {
+  type: "Placeholder";
+  sequence?: boolean;
+  return?: typeDef;
+}
 
 interface baseBlock {
-  children?: blockRef[];
+  children?: childBlockRef[];
+  return?: typeDef;
+}
+
+export interface sequenceBlock extends baseBlock {
+  opcode: "Sequence";
+  children: concreteBlockRef[];
+  return?: undefined;
 }
 
 /**
@@ -164,6 +157,11 @@ interface baseBlock {
 export interface booleanBlock extends baseBlock {
   opcode: "Boolean";
   value: boolean;
+  return: {
+    c: "Boolean";
+    inferrable?: false;
+    generics?: undefined;
+  };
 }
 
 /**
@@ -172,6 +170,11 @@ export interface booleanBlock extends baseBlock {
 export interface integerBlock extends baseBlock {
   opcode: "Integer";
   value: number;
+  return: {
+    c: "Integer";
+    inferrable?: false;
+    generics?: undefined;
+  };
 }
 
 /**
@@ -180,6 +183,11 @@ export interface integerBlock extends baseBlock {
 export interface floatBlock extends baseBlock {
   opcode: "Float";
   value: number;
+  return: {
+    c: "Float";
+    inferrable?: false;
+    generics?: undefined;
+  };
 }
 
 /**
@@ -188,6 +196,11 @@ export interface floatBlock extends baseBlock {
 export interface stringBlock extends baseBlock {
   opcode: "String";
   value: string;
+  return: {
+    c: "String";
+    inferrable?: false;
+    generics?: undefined;
+  };
 }
 
 /**
@@ -195,7 +208,12 @@ export interface stringBlock extends baseBlock {
  */
 export interface arrayBlock extends baseBlock {
   opcode: "Array";
-  children: blockRef[];
+  children: childBlockRef[];
+  return: {
+    c: "Array";
+    generics: { item: typeDef };
+    inferrable?: false;
+  };
 }
 
 /**
@@ -205,8 +223,8 @@ export interface arrayBlock extends baseBlock {
 export interface constructBlock extends baseBlock {
   opcode: "Construct";
   c: string;
-  arguments: { [key: string]: number };
-  children: blockRef[];
+  children: childBlockRef[];
+  return: typeDef;
 }
 
 /**
@@ -215,7 +233,8 @@ export interface constructBlock extends baseBlock {
 export interface setVariableBlock extends baseBlock {
   opcode: "Set Variable";
   variable: string;
-  children: [blockRef];
+  children: [childBlockRef];
+  return?: undefined;
 }
 
 /**
@@ -224,6 +243,7 @@ export interface setVariableBlock extends baseBlock {
 export interface getVariableBlock extends baseBlock {
   opcode: "Get Variable";
   variable: string;
+  return: typeDef;
 }
 
 /**
@@ -233,7 +253,8 @@ export interface setAttributeBlock extends baseBlock {
   opcode: "Set Attribute";
   attribute: string;
   // [Object, To]
-  children: [blockRef, blockRef];
+  children: [childBlockRef, childBlockRef];
+  return?: undefined;
 }
 
 /**
@@ -241,8 +262,9 @@ export interface setAttributeBlock extends baseBlock {
  */
 export interface getAttributeBlock extends baseBlock {
   opcode: "Get Attribute";
-  object: blockRef;
   attribute: string;
+  children: [childBlockRef];
+  return: typeDef;
 }
 
 /**
@@ -251,7 +273,8 @@ export interface getAttributeBlock extends baseBlock {
 export interface functionCallBlock extends baseBlock {
   opcode: "Function Call";
   function: funcRef;
-  arguments: { [key: string]: blockRef };
+  arguments: { [key: string]: number };
+  children: childBlockRef[];
 }
 
 /**
@@ -259,9 +282,10 @@ export interface functionCallBlock extends baseBlock {
  */
 export interface methodCallBlock extends baseBlock {
   opcode: "Method Call";
-  object: blockRef;
+  c: string;
   method: string;
-  arguments: { [key: string]: blockRef };
+  // [Object, ...args]
+  children: childBlockRef[];
 }
 
 /**
@@ -269,7 +293,8 @@ export interface methodCallBlock extends baseBlock {
  */
 export interface returnBlock extends baseBlock {
   opcode: "Return";
-  block?: blockRef;
+  children?: [childBlockRef];
+  return?: undefined;
 }
 
 /**
@@ -277,9 +302,9 @@ export interface returnBlock extends baseBlock {
  */
 export interface ifBlock extends baseBlock {
   opcode: "If";
-  condition: blockRef;
-  then: astRef;
-  else?: astRef;
+  // [condition, then, else]
+  children: [childBlockRef, childBlockRef, childBlockRef];
+  return?: undefined;
 }
 
 /**
@@ -287,8 +312,9 @@ export interface ifBlock extends baseBlock {
  */
 export interface whileBlock extends baseBlock {
   opcode: "While";
-  condition: blockRef;
-  inner: astRef;
+  // [condition, inner loop]
+  children: [childBlockRef, childBlockRef];
+  return?: undefined;
 }
 
 /**
@@ -301,11 +327,9 @@ export interface forBlock extends baseBlock {
    * current item in the array
    */
   variable: string;
-  /**
-   * The array to iterate over
-   */
-  array: blockRef;
-  inner: astRef;
+  // [array, inner loop]
+  children: [childBlockRef, childBlockRef];
+  return?: undefined;
 }
 
 /**
@@ -313,6 +337,7 @@ export interface forBlock extends baseBlock {
  */
 export interface breakBlock extends baseBlock {
   opcode: "Break";
+  return?: undefined;
 }
 
 /**
@@ -320,9 +345,7 @@ export interface breakBlock extends baseBlock {
  */
 export interface doNextFrameBlock extends baseBlock {
   opcode: "Do Next Frame";
-  inner: astRef;
-}
-
-export interface placeholderBlock extends baseBlock {
-  opcode: "Placeholder";
+  // [inner block]
+  children: [childBlockRef];
+  return?: undefined;
 }

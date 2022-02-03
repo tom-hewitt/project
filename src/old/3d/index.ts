@@ -1,5 +1,5 @@
-import { createArrayBlock } from "../old/project/blocks";
-import { library } from "../old/project/library";
+import { createArrayBlock } from "../project/blocks";
+import { library } from "../project/library";
 
 export const library3d: library = {
   classes: {

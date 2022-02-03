@@ -1,7 +1,6 @@
 import { code } from "../code";
 import { LibraryCodeBuilder } from "../code/builder";
-
-export type library = (builder: LibraryCodeBuilder) => void;
+import { library } from "../libraries";
 
 /**
  * Loads the libraries into the given code object
