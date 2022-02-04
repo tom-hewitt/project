@@ -1,5 +1,4 @@
 import { ReactNode, useState } from "react";
-import { ClassIcon } from "../../../old/icons";
 import { DragOverlay, useActive } from "../../dragger/dnd";
 import { BlockRef } from "../Block";
 import { PaletteBlock } from "../BlockPalette";
