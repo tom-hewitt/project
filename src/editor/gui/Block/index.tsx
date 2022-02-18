@@ -1,6 +1,7 @@
 import {
   BlockData,
   ChildBlockData,
+  Store,
   useClass,
   useClassColor,
   useFunc,
@@ -12,6 +13,8 @@ import {
   typeDef,
   concreteBlockRef,
   childBlockRef,
+  abstractBlockRef,
+  method,
 } from "../../../code";
 import {
   astDesriptionStyle,
@@ -58,9 +61,9 @@ import {
   useOverlay,
   usePlaceholder,
 } from "../../dragger/dnd";
-import { getMethods } from "../ClassDef";
 import { motion } from "framer-motion";
 import mergeRefs from "react-merge-refs";
+import { getMethods } from "../Class";
 
 export const useBlock = (blockRef: childBlockRef) => {
   return useStore((store) =>
@@ -126,7 +129,6 @@ export const BlockRef = forwardRef<HTMLDivElement, BlockRefProps>(
       <Block
         ref={ref}
         onMouseDown={onMouseDown}
-        name={name}
         block={block}
         parentID={blockRef.blockID}
         setBlock={(newBlock) => handleSetBlock(blockRef, newBlock)}
@@ -160,23 +162,13 @@ interface BlockProps {
     dragging?: boolean
   ) => JSX.Element | null;
   parentID: string;
-  name: string;
   dragging?: boolean;
   vertical?: boolean;
 }
 
 export const Block = forwardRef<HTMLDivElement, BlockProps>(
   (
-    {
-      block,
-      onMouseDown,
-      setBlock,
-      children,
-      parentID,
-      name,
-      dragging,
-      vertical,
-    },
+    { block, onMouseDown, setBlock, children, parentID, dragging, vertical },
     ref
   ) => {
     const childID = (name: string) => {
@@ -916,7 +908,7 @@ export const VariableReference = forwardRef<
 });
 
 interface PlaceholderProps {
-  blockRef: placeholderChildBlockRef;
+  blockRef: placeholderChildBlockRef | abstractBlockRef;
   name: string;
 }
 
@@ -925,9 +917,7 @@ export const Placeholder = ({ blockRef, name }: PlaceholderProps) => {
 
   const color = useClassColor(blockRef.return?.c);
 
-  return blockRef.sequence ? (
-    <div className={sequencePlaceholderStyle}>+</div>
-  ) : (
+  return (
     <div
       className={placeholderStyle}
       style={{

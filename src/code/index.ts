@@ -126,7 +126,10 @@ export type executableBlock =
 /**
  * A reference to a Block in the code
  */
-export type childBlockRef = concreteBlockRef | placeholderChildBlockRef;
+export type childBlockRef =
+  | concreteBlockRef
+  | abstractBlockRef
+  | placeholderChildBlockRef;
 
 export interface concreteBlockRef {
   type: "Concrete";
@@ -134,9 +137,14 @@ export interface concreteBlockRef {
   return?: typeDef;
 }
 
+export interface abstractBlockRef {
+  type: "Abstract";
+  block: block;
+  return?: typeDef;
+}
+
 export interface placeholderChildBlockRef {
   type: "Placeholder";
-  sequence?: boolean;
   return?: typeDef;
 }
 

@@ -128,6 +128,10 @@ export const evalBlock = (
     throw new Error("Can't execute placeholder block");
   }
 
+  if (blockRef.type === "Abstract") {
+    throw new Error("Can't execute abstract block");
+  }
+
   const block = runtime.code.blocks[blockRef.blockID];
 
   if (!block) {

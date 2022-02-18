@@ -192,3 +192,21 @@ export function PlayIcon() {
     </svg>
   );
 }
+
+export function BackIcon() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M11 6.11715H1M1 6.11715L4.25 2.5M1 6.11715L4.25 9.5"
+        stroke="#D6D6D6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

@@ -7,6 +7,21 @@ export const text = style({
   userSelect: "none",
 });
 
+export const bold = style([
+  text,
+  style({
+    fontWeight: 500,
+  }),
+]);
+
+export const title = style({
+  fontFamily: "Roboto",
+  color: "#D6D6D6",
+  fontSize: 60,
+  userSelect: "none",
+  fontWeight: 500,
+});
+
 export const h1 = style({
   fontFamily: "Roboto",
   color: "#D6D6D6",
@@ -34,9 +49,9 @@ export const h3 = style({
 export const subheading = style({
   fontFamily: "Roboto",
   color: "#737373",
-  fontSize: 12,
+  fontSize: 10,
   userSelect: "none",
-  fontWeight: 500,
+  fontWeight: "normal",
 });
 
 export const pointer = style({
